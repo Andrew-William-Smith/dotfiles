@@ -20,7 +20,7 @@ EDITOR="vim"
 COMPLETION_WAITING_DOTS="true"
 alias vim='vim -c "set shortmess+=I"'
 alias vi='vim -c "set shortmess+=I"'
-source ~/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+source ~/.zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
 
 # This is really stupid, but it's kind of cool.
