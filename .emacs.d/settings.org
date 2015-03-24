@@ -227,6 +227,7 @@
 #+BEGIN_SRC emacs-lisp
 (global-linum-mode t)
 (require 'linum-relative)
+(setq linum-relative-current-symbol "")
 #+END_SRC
 
 ** markdown-mode
