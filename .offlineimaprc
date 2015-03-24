@@ -1,0 +1,21 @@
+[general]
+accounts = Gmail
+maxsyncaccounts = 3
+
+[Account Gmail]
+localrepository = Local
+remoterepository = Remote
+
+[Repository Local]
+type = Maildir
+localfolders = ~/.maildir
+
+[Repository Remote]
+type = IMAP
+remotehost = imap.gmail.com
+remoteuser = andy.bill.smith@gmail.com
+remotepass = PASS
+ssl = yes
+sslcacertfile = /usr/local/etc/openssl/cert.pem
+maxconnections = 1
+realdelete = no
