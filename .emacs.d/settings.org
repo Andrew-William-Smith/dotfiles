@@ -25,21 +25,22 @@
 			  auctex                ; Enhancements for LaTeX
 			  auto-complete		; Auto-completion for most programming languages
 			  autopair
+			  darktooth-theme       ; Colour theme similar to gruvbox
 			  deft			; Note-taking similar to Notational Velocity
 			  evil			; vim emulation
 			  evil-surround		; surround.vim for evil-mode
 			  exec-path-from-shell  ; Use path variables from the shell (ZSH in my case)
-			  helm			; Fuzzy matching for files, functions, and everything else
-			  helm-spotify		; Control Spotify from Emacs, using helm
 			  jedi			; Enhance Python auto-completion and argument hinting
 			  linum-relative	; Relative line numbers, similar to vim's hybrid line numbering
 			  magit			; git integration
+			  mark-multiple         ; Multiple cursors
 			  markdown-mode		; Markdown support
 			  marmalade		; Marmalade repository
 			  nyan-mode		; Use Nyan Cat as a file position indicator.  Stupid, but surprisingly useful.
-			  rainbow-delimiters	; Color-coordinate matching delimiters
-			  rainbow-mode		; Show color strings in their actual colors
-			  solarized-theme	; Solarized color theme
+			  rainbow-delimiters	; Colour-coordinate matching delimiters
+			  rainbow-mode		; Show colour strings in their actual colours
+			  solarized-theme	; Solarized colour theme
+			  swiper                ; Enhanced ido
 			  w3m			; Web browsing in Emacs
 			  yasnippet)		; TextMate-like snippets
 "Default packages")
@@ -58,6 +59,12 @@
   (dolist (package andrew/packages)
     (when (not (package-installed-p package))
       (package-install package))))
+#+END_SRC
+
+** Random Elisp
+#+BEGIN_SRC emacs-lisp
+(defvar elisp-path '("~/.emacs.d/elisp"))
+(mapcar '(lambda(p) (add-to-list 'load-path p)) elisp-path)
 #+END_SRC
 
 * Backup files
@@ -95,17 +102,29 @@
 (set-face-attribute 'default t :font "-*-PragmataPro-normal-normal-normal-*-12-*-*-*-m-0-iso10646-1" )
 #+END_SRC
 
-** Latin input method
+** Navigate buffers with trackpad
 #+BEGIN_SRC emacs-lisp
-(defun andrew/detect-latin-input ()
+(defvar go-next-buffer t)
+(defvar go-prev-buffer t)
+
+(defun andrew/trackpad-prev-buffer ()
   (interactive)
-  (ignore-errors
-    (setq bpos (line-beginning-position))
-    (setq epos (line-end-position))
-    (when (string-match ".@latin." (buffer-substring-no-properties bpos epos))
-      (set-input-method 'latin-alt-postfix))))
-(add-hook 'after-change-major-mode-hook 'andrew/detect-latin-input)	; Check if every file is a Latin file on load
-(add-hook 'after-save-hook 'andrew/detect-latin-input)			; Check if every file is a Latin file on save
+  (when go-prev-buffer
+    (previous-buffer)
+    (setq go-prev-buffer nil)
+    (run-at-time "1 sec" nil (lambda ()
+			       (setq go-prev-buffer t)))))
+
+(defun andrew/trackpad-next-buffer ()
+  (interactive)
+  (when go-next-buffer
+    (next-buffer)
+    (setq go-next-buffer nil)
+    (run-at-time "1 sec" nil (lambda ()
+			       (setq go-next-buffer t)))))
+
+(global-set-key [triple-wheel-left]  'andrew/trackpad-prev-buffer)
+(global-set-key [triple-wheel-right] 'andrew/trackpad-next-buffer)
 #+END_SRC
 
 ** Buffer settings
@@ -145,11 +164,12 @@
 (require 'tex)
 (add-hook 'LaTeX-mode-hook
 	  (lambda ()
-	    (push '("\\={a}" . ?ā) prettify-symbols-alist)
-	    (push '("\\={e}" . ?ē) prettify-symbols-alist)
-	    (push '("\\=\\i " . ?ī) prettify-symbols-alist)
-	    (push '("\\={o}" . ?ō) prettify-symbols-alist)
-	    (push '("\\={u}" . ?ū) prettify-symbols-alist)))
+	    (push '("\\={a}"	. ?ā) prettify-symbols-alist)
+	    (push '("\\={e}"	. ?ē) prettify-symbols-alist)
+	    (push '("\\=\\i "	. ?ī) prettify-symbols-alist)
+	    (push '("\\=\\i\\"	. ?ī) prettify-symbols-alist)
+	    (push '("\\={o}"	. ?ō) prettify-symbols-alist)
+	    (push '("\\={u}"	. ?ū) prettify-symbols-alist)))
 
 (add-hook 'org-mode-hook
 	  (lambda ()
@@ -157,26 +177,47 @@
 
 (add-hook 'python-mode-hook
 	  (lambda ()
-	    (push '("+=" . ?⩲) prettify-symbols-alist)
-	    (push '("==" . ?≡) prettify-symbols-alist)
-	    (push '("!=" . ?≢) prettify-symbols-alist)
-	    (push '("self" . ?∫) prettify-symbols-alist)
-	    (push '("in" . ?∈) prettify-symbols-alist)
-	    (push '("not in" . ?∉) prettify-symbols-alist)
-	    (push '("<=" . ?≤) prettify-symbols-alist)
-	    (push '(">=" . ?≥) prettify-symbols-alist)
-	    (push '("and" . ?∧) prettify-symbols-alist)
-	    (push '("or" . ?∨) prettify-symbols-alist)
-	    (push '("float('inf')" . ?∞) prettify-symbols-alist)
-	    (push '("float(\"inf\")" . ?∞) prettify-symbols-alist)
-	    (push '("not" . ?¬) prettify-symbols-alist)
-	    (push '("lambda" . ?λ) prettify-symbols-alist)))
+	    (push '("+="		. ?⩲) prettify-symbols-alist)
+	    (push '("=="		. ?≡) prettify-symbols-alist)
+	    (push '("!="		. ?≢) prettify-symbols-alist)
+	    (push '("self"		. ?∫) prettify-symbols-alist)
+	    (push '("in"		. ?∈) prettify-symbols-alist)
+	    (push '("not in"		. ?∉) prettify-symbols-alist)
+	    (push '("<="		. ?≤) prettify-symbols-alist)
+	    (push '(">="		. ?≥) prettify-symbols-alist)
+	    (push '("and"		. ?∧) prettify-symbols-alist)
+	    (push '("or"		. ?∨) prettify-symbols-alist)
+	    (push '("float('inf')"	. ?∞) prettify-symbols-alist)
+	    (push '("float(\"inf\")"	. ?∞) prettify-symbols-alist)
+	    (push '("not"		. ?¬) prettify-symbols-alist)
+	    (push '("lambda"		. ?λ) prettify-symbols-alist)))
+#+END_SRC
+
+* Latin
+** Automatic input method changing
+#+BEGIN_SRC emacs-lisp
+(defun andrew/detect-latin-input ()
+  (interactive)
+  (ignore-errors
+    (setq bpos (line-beginning-position))
+    (setq epos (line-end-position))
+    (when (string-match ".@latin." (buffer-substring-no-properties bpos epos))
+      (set-input-method 'latin-alt-postfix))))
+(add-hook 'after-change-major-mode-hook 'andrew/detect-latin-input)	; Check if every file is a Latin file on load
+(add-hook 'after-save-hook 'andrew/detect-latin-input)			; Check if every file is a Latin file on save
+#+END_SRC
+
+** Macron replacement macro
+- *Note:* In order to specify that a character should have a macron, capitalize it.  Run this macro with the cursor on a line containing Latin text; the line does not need to be selected.
+
+#+BEGIN_SRC emacs-lisp
+(fset 'Macron\ Substitution
+   (lambda (&optional arg) "Keyboard macro." (interactive "p") (kmacro-exec-ring-item (quote ([86 58 115 47 73 32 47 92 92 105 backspace 61 92 92 105 92 92 32 47 103 return 86 58 115 47 65 47 92 92 61 123 97 125 47 103 return 86 58 115 47 69 47 61 61 backspace backspace 92 92 61 123 101 125 47 103 return 86 58 115 47 73 47 92 92 61 92 92 105 47 103 backspace backspace 32 47 103 return 86 58 115 47 79 47 92 92 61 123 111 125 47 103 return 86 58 115 47 85 47 92 92 61 123 117 125 47 103 return] 0 "%d")) arg)))
 #+END_SRC
 
 * Package customizations
 ** One-liners
 #+BEGIN_SRC emacs-lisp
-(helm-mode 1)
 (nyan-mode)
 (rainbow-mode)
 #+END_SRC
@@ -185,6 +226,23 @@
 #+BEGIN_SRC emacs-lisp
 (require 'auto-complete-config)
 (ac-config-default)
+#+END_SRC
+
+** calc
+#+BEGIN_SRC emacs-lisp
+; Use <f12> to open Quick Calc, using the current region as input if it is active.
+(defun andrew/open-quick-calc ()
+  (interactive)
+  (if mark-active
+      (calc-grab-region (region-beginning) (region-end) nil)
+    (quick-calc)))
+
+(global-set-key (kbd "<f12>") 'andrew/open-quick-calc)
+#+END_SRC
+
+** darktooth (colour theme)
+#+BEGIN_SRC emacs-lisp
+(load-theme 'darktooth t)
 #+END_SRC
 
 ** deft
@@ -208,11 +266,28 @@
 (exec-path-from-shell-initialize)
 #+END_SRC
 
+** flyspell
+#+BEGIN_SRC emacs-lisp
+(add-hook 'LaTeX-mode-hook 'flyspell-mode)
+(add-hook 'org-mode-hook   'flyspell-mode)
+(add-hook 'text-mode-hook  'flyspell-mode)
+#+END_SRC
+
 ** ispell
 #+BEGIN_SRC emacs-lisp
 (when (executable-find "hunspell")
   (setq-default ispell-program-name "hunspell")
   (setq ispell-really-hunspell t))	; Use hunspell instead of ispell
+#+END_SRC
+
+** ivy
+#+BEGIN_SRC emacs-lisp
+(ivy-mode)
+
+; Keybindings
+(global-set-key (kbd "C-s") 'swiper)
+(define-key ivy-minibuffer-map (kbd "<return>") 'ivy-alt-done)
+(define-key ivy-minibuffer-map (kbd "<tab>")    'ivy-alt-done)
 #+END_SRC
 
 ** jedi
@@ -228,6 +303,12 @@
 (global-linum-mode t)
 (require 'linum-relative)
 (setq linum-relative-current-symbol "")
+#+END_SRC
+
+** mark-multiple
+#+BEGIN_SRC emacs-lisp
+(define-key evil-visual-state-map (kbd "M-j") 'mark-next-like-this)
+(define-key evil-visual-state-map (kbd "M-k") 'mark-previous-like-this)
 #+END_SRC
 
 ** markdown-mode
@@ -247,24 +328,23 @@
 *** Folders
 **** Specify folder locations for different types of mail
 #+BEGIN_SRC emacs-lisp
-(setq mu4e-drafts-folder "/[Gmail].Drafts")
-(setq mu4e-sent-folder   "/[Gmail].Sent Mail")
-(setq mu4e-trash-folder  "/[Gmail].Trash")
+(setq mu4e-drafts-folder "/Drafts")
+(setq mu4e-sent-folder   "/Sent")
+(setq mu4e-trash-folder  "/Trash")
 #+END_SRC
 
 **** Shortcuts
 #+BEGIN_SRC emacs-lisp
 (setq mu4e-maildir-shortcuts
-    '( ("/INBOX"               . ?i)
-       ("/[Gmail].Sent Mail"   . ?s)
-       ("/[Gmail].Trash"       . ?t)
-       ("/[Gmail].All Mail"    . ?a)))
+    '( ("/INBOX"	. ?i)
+       ("/Sent"		. ?s)
+       ("/Trash"	. ?t)))
 #+END_SRC
 
 *** Personal Information
 #+BEGIN_SRC emacs-lisp
 (setq
-   user-mail-address "andy.bill.smith@gmail.com"
+   user-mail-address "a@xn--80a.ws"
    user-full-name  "Andrew W. Smith"
    mu4e-compose-signature
     (concat
@@ -300,14 +380,22 @@
 *** Sending mail
 #+BEGIN_SRC emacs-lisp
 (require 'smtpmail)
-(setq message-send-mail-function 'smtpmail-send-it
-      smtpmail-stream-type 'starttls
-      smtpmail-default-smtp-server "smtp.gmail.com"
-      smtpmail-smtp-server "smtp.gmail.com"
-      smtpmail-smtp-service 587)
+(setq smtpmail-stream-type 'tls
+      message-send-mail-function 'smtpmail-send-it
+      smtpmail-smtp-server "smtp.zoho.com"
+      smtpmail-default-smtp-server "smtp.zoho.com"
+      smtpmail-smtp-service 587
+      smtpmail-starttls-credentials '(("smtp.zoho.com" 587 nil nil)))
 #+END_SRC
 
 ** org-mode
+*** MobileOrg
+#+BEGIN_SRC emacs-lisp
+(setq org-mobile-inbox-for-pull "~/org-mode/todo.org")
+(setq org-mobile-directory "~/Dropbox/Apps/MobileOrg")
+(setq org-mobile-files '("~/org-mode"))
+#+END_SRC
+
 *** org-agenda
 #+BEGIN_SRC emacs-lisp
 (global-set-key "\C-ca" 'org-agenda)	; Open the org-mode agenda from anywhere
@@ -348,12 +436,21 @@
 (add-hook 'after-change-major-mode-hook 'rainbow-delimiters-mode)
 #+END_SRC
 
-** Solarized Dark (colour theme)
+** Solarized Dark (alternate colour theme)
 #+BEGIN_SRC emacs-lisp
-(setq solarized-distinct-fringe-background t)	; Make the fringe stand out from the background
-(setq solarized-use-less-bold t)		; Make my code less distracting
-(load-theme 'solarized-dark t)			; Use the dark variant of Solarized
-(setq x-underline-at-descent-line t)		; Place the underline at the very bottom of the fringe
+; (setq solarized-distinct-fringe-background t)	; Make the fringe stand out from the background
+; (setq solarized-use-less-bold t)		; Make my code less distracting
+; (load-theme 'solarized-dark t)		; Use the dark variant of Solarized
+; (setq x-underline-at-descent-line t)		; Place the underline at the very bottom of the fringe
+#+END_SRC
+
+** template
+#+BEGIN_SRC emacs-lisp
+(require 'template)
+(template-initialize)
+
+(add-to-list 'template-expansion-alist
+	     '("USDATE" (insert (format-time-string "%-m/%-d/%Y"))))
 #+END_SRC
 
 ** w3m
