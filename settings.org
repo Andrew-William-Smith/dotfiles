@@ -1,0 +1,434 @@
+#+title: Emacs init File
+#+author: Andrew Smith
+
+* Use Homebrew programs
+#+BEGIN_SRC emacs-lisp
+(setenv "PATH" (concat "/usr/local/bin" (getenv "PATH")))
+(add-to-list 'exec-path "/usr/local/bin")
+
+(require 'cl)	; Common Lisp
+#+END_SRC
+
+* Packages
+** MELPA
+#+BEGIN_SRC emacs-lisp
+(load "package")
+(package-initialize)
+(add-to-list 'package-archives
+	     '("melpa" . "http://melpa.org/packages/") t)	; New MELPA repository
+(setq package-archive-enable-alist '(("melpa" deft magit)))	; Index MELPA packages for easy browsing
+#+END_SRC
+
+** Packages
+#+BEGIN_SRC emacs-lisp
+(defvar andrew/packages '(2048-game		; Play a game of 2048.  Why not?
+			  auctex                ; Enhancements for LaTeX
+			  auto-complete		; Auto-completion for most programming languages
+			  autopair
+			  darktooth-theme       ; Colour theme similar to gruvbox
+			  deft			; Note-taking similar to Notational Velocity
+			  evil			; vim emulation
+			  evil-surround		; surround.vim for evil-mode
+			  exec-path-from-shell  ; Use path variables from the shell (ZSH in my case)
+			  jedi			; Enhance Python auto-completion and argument hinting
+			  linum-relative	; Relative line numbers, similar to vim's hybrid line numbering
+			  magit			; git integration
+			  mark-multiple         ; Multiple cursors
+			  markdown-mode		; Markdown support
+			  marmalade		; Marmalade repository
+			  nyan-mode		; Use Nyan Cat as a file position indicator.  Stupid, but surprisingly useful.
+			  rainbow-delimiters	; Colour-coordinate matching delimiters
+			  rainbow-mode		; Show colour strings in their actual colours
+			  solarized-theme	; Solarized colour theme
+			  sr-speedbar           ; Dock the speedbar in the same frame as the file
+			  swiper                ; Enhanced ido
+			  twittering-mode       ; Browse twitter in Emacs
+			  w3m			; Web browsing in Emacs
+			  yasnippet)		; TextMate-like snippets
+"Default packages")
+#+END_SRC
+
+** Install non-installed packages on startup
+#+BEGIN_SRC emacs-lisp
+(defun andrew/packages-installed-p ()
+  (loop for package in andrew/packages
+	when (not (package-installed-p package)) do (return nil)
+	finally (return t)))
+
+(unless (andrew/packages-installed-p)
+  (message "%s" "Refreshing package database...")
+  (package-refresh-contents)
+  (dolist (package andrew/packages)
+    (when (not (package-installed-p package))
+      (package-install package))))
+#+END_SRC
+
+** Random Elisp
+#+BEGIN_SRC emacs-lisp
+(defvar elisp-path '("~/.emacs.d/elisp"))
+(mapcar '(lambda(p) (add-to-list 'load-path p)) elisp-path)
+#+END_SRC
+
+* Backup files
+#+BEGIN_SRC emacs-lisp
+(setq backup-directory-alist `(("." . "~/.emacs.d/backups")))	; Don't clutter up my directories with backup files
+(setq backup-by-copying t)					; Copy files to create backups
+(setq delete-old-versions t
+      kept-new-versions 6
+      kept-old-versions 2
+      version-control t)					; Delete old backup files
+#+END_SRC
+
+* GUI options
+** No GUI elements
+#+BEGIN_SRC emacs-lisp
+(scroll-bar-mode -1)
+(tool-bar-mode -1)
+#+END_SRC
+
+** Display buffer name in window title
+#+BEGIN_SRC emacs-lisp
+(when window-system
+  (setq frame-title-format '(buffer-file-name "%f" ("%b"))))
+#+END_SRC
+
+** Keybindings
+#+BEGIN_SRC emacs-lisp
+(defalias 'yes-or-no-p 'y-or-n-p)			; Yay, laziness!
+(global-set-key (kbd "RET") 'newline-and-indent)	; Sensical RET binding
+#+END_SRC
+
+** Font
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'default-frame-alist '(font . "-*-PragmataPro-normal-normal-normal-*-12-*-*-*-m-0-iso10646-1" ))
+(set-face-attribute 'default t :font "-*-PragmataPro-normal-normal-normal-*-12-*-*-*-m-0-iso10646-1" )
+#+END_SRC
+
+** Buffer settings
+#+BEGIN_SRC emacs-lisp
+(setq echo-keystrokes 0.1			; Show keystrokes quickly
+      use-dialog-box nil			; No dialog boxes when running in GUI mode
+      visual-bell t)				; Don't beep every five seconds
+(show-paren-mode t)				; Show matching parentheses
+(setq column-number-mode t)			; Show column numbers
+(setq-default show-trailing-whitespace t)	; Show trailing whitespace
+(global-hl-line-mode)				; Highlight the current line
+#+END_SRC
+
+** Better window navigation
+#+BEGIN_SRC emacs-lisp
+(when (fboundp 'windmove-default-keybindings)
+  (windmove-default-keybindings))
+#+END_SRC
+
+** SQL Interactive Mode
+#+BEGIN_SRC emacs-lisp
+(add-hook 'sql-interactive-mode-hook
+	  (lambda ()
+	    (toggle-truncate-lines t)))
+#+END_SRC
+
+** Soft tabs
+#+BEGIN_SRC emacs-lisp
+(setq tab-width 4
+      indent-tabs-mode nil)
+#+END_SRC
+
+** Prettify symbols
+#+BEGIN_SRC emacs-lisp
+(global-prettify-symbols-mode +1)
+
+(require 'tex)
+(add-hook 'LaTeX-mode-hook
+	  (lambda ()
+	    (push '("\\={a}"	. ?ā) prettify-symbols-alist)
+	    (push '("\\={e}"	. ?ē) prettify-symbols-alist)
+	    (push '("\\=\\i "	. ?ī) prettify-symbols-alist)
+	    (push '("\\=\\i\\"	. ?ī) prettify-symbols-alist)
+	    (push '("\\={o}"	. ?ō) prettify-symbols-alist)
+	    (push '("\\={u}"	. ?ū) prettify-symbols-alist)))
+
+(add-hook 'org-mode-hook
+	  (lambda ()
+	    (push '("->" . ?→) prettify-symbols-alist)))
+
+(add-hook 'python-mode-hook
+	  (lambda ()
+	    (push '("+="		. ?⩲) prettify-symbols-alist)
+	    (push '("=="		. ?≡) prettify-symbols-alist)
+	    (push '("!="		. ?≢) prettify-symbols-alist)
+	    (push '("self"		. ?∫) prettify-symbols-alist)
+	    (push '("in"		. ?∈) prettify-symbols-alist)
+	    (push '("not in"		. ?∉) prettify-symbols-alist)
+	    (push '("<="		. ?≤) prettify-symbols-alist)
+	    (push '(">="		. ?≥) prettify-symbols-alist)
+	    (push '("and"		. ?∧) prettify-symbols-alist)
+	    (push '("or"		. ?∨) prettify-symbols-alist)
+	    (push '("float('inf')"	. ?∞) prettify-symbols-alist)
+	    (push '("float(\"inf\")"	. ?∞) prettify-symbols-alist)
+	    (push '("not"		. ?¬) prettify-symbols-alist)
+	    (push '("lambda"		. ?λ) prettify-symbols-alist)))
+
+(add-hook 'c-mode-hook
+	  (lambda ()
+	    (push '("+=" . ?⩲) prettify-symbols-alist)
+	    (push '("*=" . ?⩮) prettify-symbols-alist)
+	    (push '("<=" . ?≤) prettify-symbols-alist)
+	    (push '(">=" . ?≥) prettify-symbols-alist)
+	    (push '("==" . ?≡) prettify-symbols-alist)
+	    (push '("!=" . ?≢) prettify-symbols-alist)
+	    (push '("->" . ?→) prettify-symbols-alist)
+	    (push '("&&" . ?∧) prettify-symbols-alist)
+	    (push '("||" . ?∨) prettify-symbols-alist)))
+#+END_SRC
+
+* Latin
+** Automatic input method changing
+#+BEGIN_SRC emacs-lisp
+(defun andrew/detect-latin-input ()
+  (interactive)
+  (ignore-errors
+    (setq bpos (line-beginning-position))
+    (setq epos (line-end-position))
+    (when (string-match ".@latin." (buffer-substring-no-properties bpos epos))
+      (set-input-method 'latin-alt-postfix))))
+(add-hook 'after-change-major-mode-hook 'andrew/detect-latin-input)	; Check if every file is a Latin file on load
+(add-hook 'after-save-hook 'andrew/detect-latin-input)			; Check if every file is a Latin file on save
+#+END_SRC
+
+** Macron replacement macro
+- *Note:* In order to specify that a character should have a macron, capitalize it.  Run this macro with the cursor on a line containing Latin text; the line does not need to be selected.
+
+#+BEGIN_SRC emacs-lisp
+(fset 'Macron\ Substitution
+   (lambda (&optional arg) "Keyboard macro." (interactive "p") (kmacro-exec-ring-item (quote ([86 58 115 47 73 32 47 92 92 105 backspace 61 92 92 105 92 92 32 47 103 return 86 58 115 47 65 47 92 92 61 123 97 125 47 103 return 86 58 115 47 69 47 61 61 backspace backspace 92 92 61 123 101 125 47 103 return 86 58 115 47 73 47 92 92 61 92 92 105 47 103 backspace backspace 32 47 103 return 86 58 115 47 79 47 92 92 61 123 111 125 47 103 return 86 58 115 47 85 47 92 92 61 123 117 125 47 103 return] 0 "%d")) arg)))
+#+END_SRC
+
+* Package customizations
+** One-liners
+#+BEGIN_SRC emacs-lisp
+(require 'cobol-mode)
+(nyan-mode)
+(rainbow-mode)
+(require 'sr-speedbar)
+#+END_SRC
+
+** AucTeX
+#+BEGIN_SRC emacs-lisp
+(setq-default TeX-engine 'xetex)
+(setq-default TeX-PDF-mode t)
+(add-hook 'doc-view-mode-hook 'auto-revert-mode)
+#+END_SRC
+
+** auto-complete
+#+BEGIN_SRC emacs-lisp
+(require 'auto-complete-config)
+(ac-config-default)
+#+END_SRC
+
+** calc
+#+BEGIN_SRC emacs-lisp
+; Use <f12> to open Quick Calc, using the current region as input if it is active.
+(defun andrew/open-quick-calc ()
+  (interactive)
+  (if mark-active
+      (calc-grab-region (region-beginning) (region-end) nil)
+    (quick-calc)))
+
+(global-set-key (kbd "<f12>") 'andrew/open-quick-calc)
+#+END_SRC
+
+** darktooth (colour theme)
+#+BEGIN_SRC emacs-lisp
+(load-theme 'darktooth t)
+#+END_SRC
+
+** deft
+#+BEGIN_SRC emacs-lisp
+(require 'deft)
+(setq deft-extension "markdown")	; Always use Markdown, except for special cases
+(setq deft-directory "~/Dropbox/deft")	; Sync deft files with Dropbox for access everywhere
+(setq deft-text-mode 'markdown-mode)
+#+END_SRC
+
+** evil-mode
+#+BEGIN_SRC emacs-lisp
+(setq evil-want-C-u-scroll t)	; Use C-u to scroll up half a page, like in vim.
+(evil-mode)
+; (evil-avy-mode)               ; Allow ace-jump-like navigation when performing motions
+(global-evil-surround-mode 1)	; Enable evil-surround everywhere
+#+END_SRC
+
+** exec-path-from-shell
+#+BEGIN_SRC emacs-lisp
+(exec-path-from-shell-copy-env "PYTHONPATH")	; Use $PYTHONPATH so the proper libraries are used
+(exec-path-from-shell-initialize)
+#+END_SRC
+
+** flyspell
+#+BEGIN_SRC emacs-lisp
+(add-hook 'LaTeX-mode-hook 'flyspell-mode)
+(add-hook 'org-mode-hook   'flyspell-mode)
+(add-hook 'text-mode-hook  'flyspell-mode)
+#+END_SRC
+
+** ispell
+#+BEGIN_SRC emacs-lisp
+(when (executable-find "hunspell")
+  (setq-default ispell-program-name "hunspell")
+  (setq ispell-really-hunspell t))	; Use hunspell instead of ispell
+
+(global-set-key (kbd "<f9>") 'ispell-buffer)
+#+END_SRC
+
+** ivy
+#+BEGIN_SRC emacs-lisp
+(ivy-mode)
+
+; Keybindings
+(global-set-key (kbd "C-s") 'swiper)
+(define-key ivy-minibuffer-map (kbd "<return>") 'ivy-alt-done)
+(define-key ivy-minibuffer-map (kbd "<tab>")    'ivy-alt-done)
+#+END_SRC
+
+** jedi
+*** Note: Run ~M-x jedi:install-server RET~ if this is a new installation.
+
+#+BEGIN_SRC emacs-lisp
+(add-hook 'python-mode-hook 'jedi:setup)	; Only in Python, as it's of no use everywhere else
+(setq jedi:complete-on-dot t)			; Suggest completions when a period is inserted
+#+END_SRC
+
+** linum-relative
+#+BEGIN_SRC emacs-lisp
+(global-linum-mode t)
+(require 'linum-relative)
+(setq linum-relative-current-symbol "")
+(linum-relative-global-mode)
+#+END_SRC
+
+** mark-multiple
+#+BEGIN_SRC emacs-lisp
+(define-key evil-visual-state-map (kbd "M-j") 'mark-next-like-this)
+(define-key evil-visual-state-map (kbd "M-k") 'mark-previous-like-this)
+#+END_SRC
+
+** markdown-mode
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'auto-mode-alist '("\\.md$" . markdown-mode))
+(add-to-list 'auto-mode-alist '("\\.mdown$" . markdown-mode))
+(add-to-list 'auto-mode-alist '("\\.markdown$" . markdown-mode))
+#+END_SRC
+
+** org-mode
+*** MobileOrg
+#+BEGIN_SRC emacs-lisp
+(setq org-mobile-inbox-for-pull "~/org-mode/todo.org")
+(setq org-mobile-directory "~/Dropbox/Apps/MobileOrg")
+(setq org-mobile-files '("~/org-mode"))
+#+END_SRC
+
+*** org-agenda
+#+BEGIN_SRC emacs-lisp
+(global-set-key "\C-ca" 'org-agenda)		; Open the org-mode agenda from anywhere
+(setq org-agenda-todo-ignore-scheduled 'future) ; Only show scheduled items for the current day
+(setq org-agenda-tags-todo-honor-ignore-options t)
+(setq org-agenda-skip-deadline-if-done t)	; Don't show deadlines for tasks that are done
+(setq org-agenda-skip-scheduled-if-done t)	; Same thing, with schedules
+#+END_SRC
+
+*** org-babel
+#+BEGIN_SRC emacs-lisp
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((python . t)))
+#+END_SRC
+
+*** org-capture
+#+BEGIN_SRC emacs-lisp
+(setq org-directory "~/org-mode")					; Directory containing org files
+(setq org-default-notes-file (concat org-directory "/notes.org"))	; Default notes file
+(define-key global-map "\C-cc" 'org-capture)				; org-capture from anywhere
+
+(setq org-capture-templates
+      '(("t" "To-Do"
+	     entry (file+headline "~/org-mode/todo.org" "General")
+             "* □ %?             %^g"
+	     :empty-lines 1)
+        ("s" "School To-Do"
+	     entry (file+headline "~/org-mode/todo.org" "School")
+	     "* □ %?             %^g"
+	     :empty-lines 1)
+	("q" "Question"
+	     entry (file "~/org-mode/questions.org")
+	     "* %?             %^g\n-- Asked on %t"
+	     :empty-lines 1)
+        ("n" "General Note"
+	     entry (file "~/org-mode/notes.org")
+	     "* %?\n-- Taken on %t"
+	     :empty-lines 1)))						; Capture templates
+#+END_SRC
+
+** rainbow-delimiters-mode
+#+BEGIN_SRC emacs-lisp
+(require 'rainbow-delimiters)
+#+END_SRC
+
+*** global-rainbow-delimiters-mode workaround
+#+BEGIN_SRC emacs-lisp
+(add-hook 'after-change-major-mode-hook 'rainbow-delimiters-mode)
+#+END_SRC
+
+** Solarized Dark (alternate colour theme)
+#+BEGIN_SRC emacs-lisp
+; (setq solarized-distinct-fringe-background t)	; Make the fringe stand out from the background
+; (setq solarized-use-less-bold t)		; Make my code less distracting
+; (load-theme 'solarized-dark t)		; Use the dark variant of Solarized
+; (setq x-underline-at-descent-line t)		; Place the underline at the very bottom of the fringe
+#+END_SRC
+
+** template
+#+BEGIN_SRC emacs-lisp
+(require 'template)
+(template-initialize)
+
+(add-to-list 'template-expansion-alist
+	     '("USDATE" (insert (format-time-string "%-m/%-d/%Y"))))
+#+END_SRC
+
+** twittering-mode
+#+BEGIN_SRC emacs-lisp
+(setq twittering-icon-mode t) ; Show user profile photos
+#+END_SRC
+
+** w3m
+*** General
+#+BEGIN_SRC emacs-lisp
+(w3m-lnum-mode)					; Emulate Vimperator for Firefox
+(setq w3m-default-display-inline-images t)	; Display all images inline
+(setq w3m-use-cookies t)			; The web doesn't work very well without cookies
+#+END_SRC
+
+*** Remove trailing whitespace
+#+BEGIN_SRC emacs-lisp
+(add-hook 'w3m-display-hook
+	  (lambda (url)
+	    (let ((buffer-read-only nil))
+	      (delete-trailing-whitespace))))
+#+END_SRC
+
+** yasnippet
+#+BEGIN_SRC emacs-lisp
+(require 'yasnippet)
+(yas-global-mode 1)
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+(custom-set-variables
+;; custom-set-variables was added by Custom.
+;; If you edit it by hand, you could mess it up, so be careful.
+;; Your init file should contain only one such instance.
+;; If there is more than one, they won't work right.
+ '(markdown-command
+   "pandoc -f markdown -t html -s --mathjax --highlight-style pygments"))
+#+END_SRC
