@@ -40,7 +40,9 @@
 			  rainbow-delimiters	; Colour-coordinate matching delimiters
 			  rainbow-mode		; Show colour strings in their actual colours
 			  solarized-theme	; Solarized colour theme
+			  sr-speedbar           ; Dock the speedbar in the same frame as the file
 			  swiper                ; Enhanced ido
+			  twittering-mode       ; Browse twitter in Emacs
 			  w3m			; Web browsing in Emacs
 			  yasnippet)		; TextMate-like snippets
 "Default packages")
@@ -100,31 +102,6 @@
 #+BEGIN_SRC emacs-lisp
 (add-to-list 'default-frame-alist '(font . "-*-PragmataPro-normal-normal-normal-*-12-*-*-*-m-0-iso10646-1" ))
 (set-face-attribute 'default t :font "-*-PragmataPro-normal-normal-normal-*-12-*-*-*-m-0-iso10646-1" )
-#+END_SRC
-
-** Navigate buffers with trackpad
-#+BEGIN_SRC emacs-lisp
-(defvar go-next-buffer t)
-(defvar go-prev-buffer t)
-
-(defun andrew/trackpad-prev-buffer ()
-  (interactive)
-  (when go-prev-buffer
-    (previous-buffer)
-    (setq go-prev-buffer nil)
-    (run-at-time "1 sec" nil (lambda ()
-			       (setq go-prev-buffer t)))))
-
-(defun andrew/trackpad-next-buffer ()
-  (interactive)
-  (when go-next-buffer
-    (next-buffer)
-    (setq go-next-buffer nil)
-    (run-at-time "1 sec" nil (lambda ()
-			       (setq go-next-buffer t)))))
-
-(global-set-key [triple-wheel-left]  'andrew/trackpad-prev-buffer)
-(global-set-key [triple-wheel-right] 'andrew/trackpad-next-buffer)
 #+END_SRC
 
 ** Buffer settings
@@ -191,6 +168,18 @@
 	    (push '("float(\"inf\")"	. ?∞) prettify-symbols-alist)
 	    (push '("not"		. ?¬) prettify-symbols-alist)
 	    (push '("lambda"		. ?λ) prettify-symbols-alist)))
+
+(add-hook 'c-mode-hook
+	  (lambda ()
+	    (push '("+=" . ?⩲) prettify-symbols-alist)
+	    (push '("*=" . ?⩮) prettify-symbols-alist)
+	    (push '("<=" . ?≤) prettify-symbols-alist)
+	    (push '(">=" . ?≥) prettify-symbols-alist)
+	    (push '("==" . ?≡) prettify-symbols-alist)
+	    (push '("!=" . ?≢) prettify-symbols-alist)
+	    (push '("->" . ?→) prettify-symbols-alist)
+	    (push '("&&" . ?∧) prettify-symbols-alist)
+	    (push '("||" . ?∨) prettify-symbols-alist)))
 #+END_SRC
 
 * Latin
@@ -218,8 +207,17 @@
 * Package customizations
 ** One-liners
 #+BEGIN_SRC emacs-lisp
+(require 'cobol-mode)
 (nyan-mode)
 (rainbow-mode)
+(require 'sr-speedbar)
+#+END_SRC
+
+** AucTeX
+#+BEGIN_SRC emacs-lisp
+(setq-default TeX-engine 'xetex)
+(setq-default TeX-PDF-mode t)
+(add-hook 'doc-view-mode-hook 'auto-revert-mode)
 #+END_SRC
 
 ** auto-complete
@@ -257,6 +255,7 @@
 #+BEGIN_SRC emacs-lisp
 (setq evil-want-C-u-scroll t)	; Use C-u to scroll up half a page, like in vim.
 (evil-mode)
+; (evil-avy-mode)               ; Allow ace-jump-like navigation when performing motions
 (global-evil-surround-mode 1)	; Enable evil-surround everywhere
 #+END_SRC
 
@@ -278,6 +277,8 @@
 (when (executable-find "hunspell")
   (setq-default ispell-program-name "hunspell")
   (setq ispell-really-hunspell t))	; Use hunspell instead of ispell
+
+(global-set-key (kbd "<f9>") 'ispell-buffer)
 #+END_SRC
 
 ** ivy
@@ -303,6 +304,7 @@
 (global-linum-mode t)
 (require 'linum-relative)
 (setq linum-relative-current-symbol "")
+(linum-relative-global-mode)
 #+END_SRC
 
 ** mark-multiple
@@ -318,76 +320,6 @@
 (add-to-list 'auto-mode-alist '("\\.markdown$" . markdown-mode))
 #+END_SRC
 
-** mu4e
-*** General
-#+BEGIN_SRC emacs-lisp
-(require 'mu4e)
-(setq mu4e-maildir "~/.maildir")	; Set in ~/.offlineimaprc
-#+END_SRC
-
-*** Folders
-**** Specify folder locations for different types of mail
-#+BEGIN_SRC emacs-lisp
-(setq mu4e-drafts-folder "/Drafts")
-(setq mu4e-sent-folder   "/Sent")
-(setq mu4e-trash-folder  "/Trash")
-#+END_SRC
-
-**** Shortcuts
-#+BEGIN_SRC emacs-lisp
-(setq mu4e-maildir-shortcuts
-    '( ("/INBOX"	. ?i)
-       ("/Sent"		. ?s)
-       ("/Trash"	. ?t)))
-#+END_SRC
-
-*** Personal Information
-#+BEGIN_SRC emacs-lisp
-(setq
-   user-mail-address "a@xn--80a.ws"
-   user-full-name  "Andrew W. Smith"
-   mu4e-compose-signature
-    (concat
-      "--\n"
-      "Andrew Smith\n"))
-#+END_SRC
-
-*** Behaviours
-#+BEGIN_SRC emacs-lisp
-(setq mu4e-sent-messages-behavior 'delete)		; Dont save sent messages to Sent Messages, as Gmail does this automatically
-(setq mu4e-get-mail-command "offlineimap")		; Use offlineimap to fetch mail
-(setq message-kill-buffer-on-exit t)			; We don't need message buffers to stick around after we're done with them
-
-(defun no-auto-fill()
-  (auto-fill-mode -1))
-(add-hook 'mu4e-compose-mode-hook 'no-auto-fill)	; Don't automatically insert line breaks
-#+END_SRC
-
-*** Render HTML messages
-#+BEGIN_SRC emacs-lisp
-(require 'mu4e-contrib)
-(setq mu4e-html2text-command 'mu4e-shr2text)
-(setq mu4e-view-prefer-html t)
-#+END_SRC
-
-*** Compose messages with org-mode
-#+BEGIN_SRC emacs-lisp
-(require 'org-mu4e)
-(setq org-mu4e-convert-to-html t)
-(defalias 'org-mail 'org-mu4e-compose-org-mode)
-#+END_SRC
-
-*** Sending mail
-#+BEGIN_SRC emacs-lisp
-(require 'smtpmail)
-(setq smtpmail-stream-type 'tls
-      message-send-mail-function 'smtpmail-send-it
-      smtpmail-smtp-server "smtp.zoho.com"
-      smtpmail-default-smtp-server "smtp.zoho.com"
-      smtpmail-smtp-service 587
-      smtpmail-starttls-credentials '(("smtp.zoho.com" 587 nil nil)))
-#+END_SRC
-
 ** org-mode
 *** MobileOrg
 #+BEGIN_SRC emacs-lisp
@@ -398,7 +330,18 @@
 
 *** org-agenda
 #+BEGIN_SRC emacs-lisp
-(global-set-key "\C-ca" 'org-agenda)	; Open the org-mode agenda from anywhere
+(global-set-key "\C-ca" 'org-agenda)		; Open the org-mode agenda from anywhere
+(setq org-agenda-todo-ignore-scheduled 'future) ; Only show scheduled items for the current day
+(setq org-agenda-tags-todo-honor-ignore-options t)
+(setq org-agenda-skip-deadline-if-done t)	; Don't show deadlines for tasks that are done
+(setq org-agenda-skip-scheduled-if-done t)	; Same thing, with schedules
+#+END_SRC
+
+*** org-babel
+#+BEGIN_SRC emacs-lisp
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((python . t)))
 #+END_SRC
 
 *** org-capture
@@ -410,11 +353,11 @@
 (setq org-capture-templates
       '(("t" "To-Do"
 	     entry (file+headline "~/org-mode/todo.org" "General")
-             "* TODO %?             %^g"
+             "* □ %?             %^g"
 	     :empty-lines 1)
         ("s" "School To-Do"
 	     entry (file+headline "~/org-mode/todo.org" "School")
-	     "* TODO %?             %^g"
+	     "* □ %?             %^g"
 	     :empty-lines 1)
 	("q" "Question"
 	     entry (file "~/org-mode/questions.org")
@@ -451,6 +394,11 @@
 
 (add-to-list 'template-expansion-alist
 	     '("USDATE" (insert (format-time-string "%-m/%-d/%Y"))))
+#+END_SRC
+
+** twittering-mode
+#+BEGIN_SRC emacs-lisp
+(setq twittering-icon-mode t) ; Show user profile photos
 #+END_SRC
 
 ** w3m
