@@ -1,1 +1,2 @@
-machine smtp.gmail.com login andy.bill.smith port 587 password PASS
+machine smtp.gmail.com login andy.bill.smith@gmail.com port 587 password PASS
+machine localhost login STMARKS\18smitha@smtexas.org port 1025 password PASS

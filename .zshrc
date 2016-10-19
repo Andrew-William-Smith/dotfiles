@@ -13,21 +13,60 @@ setopt EXTENDED_GLOB
 bindkey -v
 autoload -U compinit && compinit
 zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+
 autoload -U colors && colors
-PROMPT="%{$fg[cyan]%}%n%{$reset_color%} at %{$fg[blue]%}%m%{$reset_color%} in %{$fg[green]%}%5(c:...:)%4c%{$reset_color%}
-%(?.%{$fg[green]%}✓.%{$fg[red]%}☭)%{$reset_color%} "
+function genprompt() {
+  local i currdir currtime arrowcol gitbranch gitappendcalc gitappend gitcol exitappend localstat
+
+  # Determine if in a git repository
+  git rev-parse 2> /dev/null
+  if [ $? -ne 128 ]; then
+    if [[ `git status --porcelain` ]]
+      then gitcol="%{$fg[red]%}"
+      else gitcol="%{$fg[green]%}"
+    fi
+    gitbranch=`git rev-parse --abbrev-ref HEAD`
+    gitappendcalc=" on ${gitbranch}"
+    gitappend=" on ${gitcol}${gitbranch}%{$reset_color%}"
+  fi
+
+  currdir="`pwd | sed "s|^$HOME|~|" 2> /dev/null | sed 's/\([^/]\)[^/]*\//\1\//g'`"
+
+  if [ $rc -eq 0 ]
+    then arrowcol="%{$fg[green]%}"
+    else arrowcol="%{$fg[red]%}"; exitappend=" ${rc} ─"
+  fi
+
+  currtime="${exitappend}${HISTCMD} at `date "+%H:%M:%S"` (${timer_show}s)"
+  newprompt="%{${fg[cyan]}%}${currdir}%{${reset_color}%}${gitappend} "
+
+  for ((i=${#currdir}-1+${#gitappendcalc}; i<=COLUMNS-4-${#currtime}; i+=1)) do
+    newprompt="${newprompt}─"
+  done
+
+  if [ $rc -eq 0 ]
+  then exitappend=""
+  else exitappend=" %{${fg[red]}%}${rc}%{${reset_color}%} ─"
+  fi
+
+  export PROMPT="${newprompt}${exitappend} ${HISTCMD} at %{${fg[yellow]}%}`date "+%H:%M:%S"`%{${reset_color}%} (${timer_show}s)${arrowcol}▶%{${reset_color}%} "
+}
+genprompt
+
 EDITOR="vim"
 COMPLETION_WAITING_DOTS="true"
 
 alias emacs='open -a /Applications/Emacs.app $1'
+alias fuck='sudo $(fc -ln -1)'
 
 source ~/.zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
 
 export CFLAGS=-Qunused-arguments
 export CPPFLAGS=-Qunused-arguments
+export PATH=/usr/local/Cellar/qt/4.8.6:/Users/andrew/Documents/School/Robotics/ConVEX\ Toolchain/gcc-arm-none-eabi-4_9-2015q3-20150921-mac/gcc-arm-none-eabi-4_9-2015q3/bin:/Users/andrew/.node/bin:$PATH
 export PKG_CONFIG_PATH=/usr/local/Cellar/libffi/3.0.13/lib/pkgconfig/
-export PYTHONPATH=/usr/local/lib/python2.7/site-packages
+export PYTHONPATH=/usr/local/lib/python2.7:/usr/local/Cellar/pyqt/4.11.1/lib/python2.7
 
 clear
 fortune -a | cowsay -f $(ls /usr/local/share/cows | gshuf -n1) | lolcat
@@ -38,9 +77,11 @@ function preexec() {
 }
 
 function precmd() {
+    rc=$?
     if [ $timer ]; then
         timer_show=$(($SECONDS - $timer))
-        export RPROMPT="%{$fg[yellow]%}${timer_show}s%{$reset_color%}"
+        echo
+        genprompt
         unset timer
     fi
 }

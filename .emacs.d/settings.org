@@ -36,6 +36,7 @@
 			  mark-multiple         ; Multiple cursors
 			  markdown-mode		; Markdown support
 			  marmalade		; Marmalade repository
+			  mu4e-alert            ; Notifications for new emails in mu4e; mu4e itself must be installed from Homebrew.
 			  nyan-mode		; Use Nyan Cat as a file position indicator.  Stupid, but surprisingly useful.
 			  rainbow-delimiters	; Colour-coordinate matching delimiters
 			  rainbow-mode		; Show colour strings in their actual colours
@@ -100,8 +101,8 @@
 
 ** Font
 #+BEGIN_SRC emacs-lisp
-(add-to-list 'default-frame-alist '(font . "-*-PragmataPro-normal-normal-normal-*-12-*-*-*-m-0-iso10646-1" ))
-(set-face-attribute 'default t :font "-*-PragmataPro-normal-normal-normal-*-12-*-*-*-m-0-iso10646-1" )
+(add-to-list 'default-frame-alist '(font . "-*-Fantasque Sans Mono-normal-normal-normal-*-12-*-*-*-m-0-iso10646-1" ))
+(set-face-attribute 'default t :font "-*-Fantasque Sans Mono-normal-normal-normal-*-12-*-*-*-m-0-iso10646-1" )
 #+END_SRC
 
 ** Buffer settings
@@ -182,32 +183,9 @@
 	    (push '("||" . ?∨) prettify-symbols-alist)))
 #+END_SRC
 
-* Latin
-** Automatic input method changing
-#+BEGIN_SRC emacs-lisp
-(defun andrew/detect-latin-input ()
-  (interactive)
-  (ignore-errors
-    (setq bpos (line-beginning-position))
-    (setq epos (line-end-position))
-    (when (string-match ".@latin." (buffer-substring-no-properties bpos epos))
-      (set-input-method 'latin-alt-postfix))))
-(add-hook 'after-change-major-mode-hook 'andrew/detect-latin-input)	; Check if every file is a Latin file on load
-(add-hook 'after-save-hook 'andrew/detect-latin-input)			; Check if every file is a Latin file on save
-#+END_SRC
-
-** Macron replacement macro
-- *Note:* In order to specify that a character should have a macron, capitalize it.  Run this macro with the cursor on a line containing Latin text; the line does not need to be selected.
-
-#+BEGIN_SRC emacs-lisp
-(fset 'Macron\ Substitution
-   (lambda (&optional arg) "Keyboard macro." (interactive "p") (kmacro-exec-ring-item (quote ([86 58 115 47 73 32 47 92 92 105 backspace 61 92 92 105 92 92 32 47 103 return 86 58 115 47 65 47 92 92 61 123 97 125 47 103 return 86 58 115 47 69 47 61 61 backspace backspace 92 92 61 123 101 125 47 103 return 86 58 115 47 73 47 92 92 61 92 92 105 47 103 backspace backspace 32 47 103 return 86 58 115 47 79 47 92 92 61 123 111 125 47 103 return 86 58 115 47 85 47 92 92 61 123 117 125 47 103 return] 0 "%d")) arg)))
-#+END_SRC
-
 * Package customizations
 ** One-liners
 #+BEGIN_SRC emacs-lisp
-(require 'cobol-mode)
 (nyan-mode)
 (rainbow-mode)
 (require 'sr-speedbar)
@@ -268,7 +246,6 @@
 ** flyspell
 #+BEGIN_SRC emacs-lisp
 (add-hook 'LaTeX-mode-hook 'flyspell-mode)
-(add-hook 'org-mode-hook   'flyspell-mode)
 (add-hook 'text-mode-hook  'flyspell-mode)
 #+END_SRC
 
@@ -313,21 +290,78 @@
 (define-key evil-visual-state-map (kbd "M-k") 'mark-previous-like-this)
 #+END_SRC
 
-** markdown-mode
+** mu4e
+*** Basic configuration
 #+BEGIN_SRC emacs-lisp
-(add-to-list 'auto-mode-alist '("\\.md$" . markdown-mode))
-(add-to-list 'auto-mode-alist '("\\.mdown$" . markdown-mode))
-(add-to-list 'auto-mode-alist '("\\.markdown$" . markdown-mode))
+(require 'mu4e)
+(setq mu4e-maildir (expand-file-name "~/.maildir"))
+(setq mu4e-get-mail-command "offlineimap")
+
+(require 'smtpmail)
+(setq message-send-mail-function 'smtpmail-send-it
+      starttls-use-gnutls t
+      smtpmail-debug-info t)
+#+END_SRC
+
+*** Account setup
+#+BEGIN_SRC emacs-lisp
+(setq mu4e-contexts
+      `( ,(make-mu4e-context
+	   :name "Gmail"
+	   :enter-func (lambda () (mu4e-message "Switch to Gmail context"))
+	   :match-func (lambda (msg)
+			 (when msg
+			   (mu4e-message-contact-field-matches msg
+							       :to "andy.bill.smith@gmail.com")))
+	   :vars '((user-mail-address . "andy.bill.smith@gmail.com")
+		   (user-full-name . "Andrew Smith")
+		   (mu4e-compose-signature . "Andrew Smith\n")
+		   (mu4e-drafts-folder . "/Gmail/drafts")
+		   (mu4e-sent-folder . "/Gmail/sent")
+		   (mu4e-trash-folder . "/Gmail/trash")
+		   (smtpmail-starttls-credentials . (("smtp.gmail.com" 587 nil nil)))
+		   (smtpmail-default-smtp-server . "smtp.gmail.com")
+		   (smtpmail-smtp-server . "smtp.gmail.com")
+		   (smtpmail-smtp-service . 587)))
+	 ,(make-mu4e-context
+	   :name "School"
+	   :enter-func (lambda () (mu4e-message "Switch to School context"))
+	   :match-func (lambda (msg)
+			 (when msg
+			   (mu4e-message-contact-field-matches msg
+							       :to "18smitha@smtexas.org")))
+	   :vars '((user-mail-address . "18smitha@smtexas.org")
+		   (user-full-name . "Andrew Smith")
+		   (mu4e-compose-signature . "Andrew Smith, Class of 2018\n")
+		   (mu4e-drafts-folder . "/School/Drafts")
+		   (mu4e-sent-folder . "/School/Sent")
+		   (mu4e-trash-folder . "/School/Trash")
+		   (smtpmail-starttls-credentials . (("localhost" 1025 nil nil)))
+		   (smtpmail-default-smtp-server . "localhost")
+		   (smtpmail-smtp-server . "localhost")
+		   (smtpmail-smtp-service . 1025)))))
+#+END_SRC
+
+*** Notifications
+#+BEGIN_SRC emacs-lisp
+(add-hook 'after-init-hook #'mu4e-alert-enable-mode-line-display)
+(setq mu4e-alert-interesting-mail-query
+      (concat
+       "flag:unread"
+       " AND NOT flag:trashed"
+       " AND NOT maildir:"
+       "\"/Gmail/[Gmail].All Mail\""
+       "\"/Gmail/[Gmail].Trash\""))
+#+END_SRC
+
+*** Shortcuts
+#+BEGIN_SRC emacs-lisp
+(setq mu4e-maildir-shortcuts
+      '(("/Gmail/INBOX" . ?G)
+	("/School/INBOX" . ?S)))
 #+END_SRC
 
 ** org-mode
-*** MobileOrg
-#+BEGIN_SRC emacs-lisp
-(setq org-mobile-inbox-for-pull "~/org-mode/todo.org")
-(setq org-mobile-directory "~/Dropbox/Apps/MobileOrg")
-(setq org-mobile-files '("~/org-mode"))
-#+END_SRC
-
 *** org-agenda
 #+BEGIN_SRC emacs-lisp
 (global-set-key "\C-ca" 'org-agenda)		; Open the org-mode agenda from anywhere
@@ -367,6 +401,12 @@
 	     entry (file "~/org-mode/notes.org")
 	     "* %?\n-- Taken on %t"
 	     :empty-lines 1)))						; Capture templates
+#+END_SRC
+
+*** Formatting
+#+BEGIN_SRC emacs-lisp
+(setq-default org-hide-emphasis-markers t)
+(setq-default org-todo-keyword-faces '(("⎅" . (:family "Apple Symbols" :foreground "#FB4933")) ("□" . (:family "Apple Symbols" :foreground "#FB4933")) ("⧉" . (:family "Apple Symbols" :foreground "#FB4933")) ("⧆" . (:family "Apple Symbols" :foreground "#FB4933")) ("⊟" . (:family "Apple Symbols" :foreground "#FB4933")) ("⧈" . (:family "Apple Symbols" :foreground "#FB4933")) ("⧰" . (:family "Apple Symbols" :foreground "#FABD2F")) ("⧯" . (:family "Apple Symbols" :foreground "#84BB26")) ("⧮" . (:family "Apple Symbols" :foreground "#84BB26"))))
 #+END_SRC
 
 ** rainbow-delimiters-mode
@@ -421,14 +461,4 @@
 #+BEGIN_SRC emacs-lisp
 (require 'yasnippet)
 (yas-global-mode 1)
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
-(custom-set-variables
-;; custom-set-variables was added by Custom.
-;; If you edit it by hand, you could mess it up, so be careful.
-;; Your init file should contain only one such instance.
-;; If there is more than one, they won't work right.
- '(markdown-command
-   "pandoc -f markdown -t html -s --mathjax --highlight-style pygments"))
 #+END_SRC
