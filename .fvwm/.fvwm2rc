@@ -1,0 +1,432 @@
+# This file is copied to a new user's FVWM_USERDIR by FvwmForm-Setup form.
+# This file contains the commands fvwm reads while starting.
+
+EdgeResistance 250 10
+EdgeScroll 100 100
+ClickTime 250
+SnapAttraction 10
+
+DeskTopSize 3x3
+DeskTopName 0 Main
+DeskTopName 1 Internet
+DeskTopName 2 Nonsense
+MenuStyle * fvwm, Foreground #d7d6b1, Background #262626, Greyed grey40
+MenuStyle * Font "xft:overpass:size=15"
+
+ColormapFocus FollowsMouse
+
+Colorset 1 RootTransparent buffer, fg #262626, bg average, \
+  Tint #d7d6b1 75, bgTint #d7d6b1 75
+Colorset 2 RootTransparent buffer, fg #262626, bg average, \
+  Tint #d7d6b1 10, bgTint #d7d6b1 10
+
+Style * Colorset 1, HilightColorset 2
+BorderStyle Inactive Colorset 2
+BorderStyle Active   Colorset 1
+TitleStyle AllInactive Colorset 2
+TitleStyle AllActive   Colorset 1
+ButtonStyle All -- UseTitleStyle
+
+# default Styles:
+# make sure these fonts exist on your system:
+Style *           Font "xft:overpass:size=11"
+Style *           IconFont "xft:overpass:size=12"
+# Style *           HilightFore #262626, HilightBack #d7d6b1
+# Style *           ForeColor #d7d6b1, BackColor #262626
+Style *           BorderWidth 9, HandleWidth 9
+Style *           Icon unknown1.xpm, Color lightgrey/dimgrey
+Style *           MWMFunctions, MWMDecor, HintOverride
+Style *           DecorateTransient, NoPPosition
+Style *           IconBox 0 -10 -280 -1
+Style *           FocusFollowsMouse, MouseFocusClickRaises
+Style *           TileCascadePlacement
+Style *           EWMHUseStackingOrderHints
+Style *           TitleAtLeft
+
+# Styles for various Fvwm modules:
+Style Fvwm*       NoTitle,  Sticky, WindowListSkip
+Style Fvwm*       BorderWidth 2, CirculateSkipIcon, CirculateSkip
+Style FvwmPager   StaysOnTop
+Style FvwmBanner  StaysOnTop
+Style FvwmButtons Icon toolbox.xpm, ClickToFocus
+
+# Styles for your common terminal emulator programs.
+# xterms and rxvts in a separate icon box:
+Style XTerm       Icon xterm.xpm, SloppyFocus, IconBox -70 1 -1 -140
+Style rxvt        Icon term.xpm, SloppyFocus, IconBox -70 1 -1 -140
+Style rxvt        MWMBorder, MWMButtons
+
+# Styles for various common programs:
+Style *lock       NoTitle, NoHandles, Sticky, WindowListSkip, ClickToFocus
+Style xbiff       NoTitle, Sticky, WindowListSkip, ClickToFocus
+Style xcalc       Icon xcalc.xpm, NoButton 2,ClickToFocus
+Style xmh         Icon mail1.xpm, NoIconTitle,StickyIcon
+Style xmh         NoButton 2
+Style xman        Icon xman.xpm, ClickToFocus
+Style xmag        Icon mag_glass.xpm, ClickToFocus
+Style xgraph      Icon graphs.xpm, ClickToFocus
+Style xmosaic     Color Green/Yellow, ClickToFocus
+
+
+# some simple default key bindings:
+Key Next         A       SCM     Next [*] Focus
+Key Prior        A       SCM     Prev [*] Focus
+
+# Move windows with HJKL (Meta)
+Key h            A       M       MoveWindowLeft
+Key j            A       M       MoveWindowDown
+Key k            A       M       MoveWindowUp
+Key l            A       M       MoveWindowRight
+
+# Resize windows with HJKL (Meta+Shift)
+Key h            A       MS      ResizeWindowLeft
+Key j            A       MS      ResizeWindowDown
+Key k            A       MS      ResizeWindowUp
+Key l            A       MS      ResizeWindowRight
+
+# Move windows to screen edges with WASD (Meta)
+Key w            A       M       MoveWindowToTop
+Key a            A       M       MoveWindowToLeft
+Key s            A       M       MoveWindowToBottom
+Key d            A       M       MoveWindowToRight
+
+# Extremely basic tiling with AD (Meta+Shift)
+Key a            A       MS      TileLeft
+Key d            A       MS      TileRight
+
+# Focus windows with HJKL (Meta+Control)
+Key h            A       MC      Direction West  (CurrentPage, AcceptsFocus, Visible) Focus
+Key l            A       MC      Direction East  (CurrentPage, AcceptsFocus, Visible) Focus
+Key k            A       MC      Direction North (CurrentPage, AcceptsFocus, Visible) Focus
+Key j            A       MC      Direction South (CurrentPage, AcceptsFocus, Visible) Focus
+
+# Shrink and float fullscreen videos with Y (Meta)
+Key y            A       M       ShrinkFullscreenPlayer
+
+# some simple default mouse bindings:
+#   for the root window:
+Mouse 1 R       A       Menu MenuFvwmRoot Nop
+Mouse 2 R       A       Menu MenuFvwmWindowOps Nop
+Mouse 3 R       A       WindowList
+
+#   for the title bar buttons:
+Mouse 0 1       A       Menu MenuFvwmWindowOps2 Close
+Mouse 0 2       A       FuncFvwmMaximize
+Mouse 0 4       A       Thumbnail
+
+#   for other parts of the window/borders/icons:
+Mouse 1 F       A       FuncFvwmResizeOrRaise
+Mouse 1 TS      A       FuncFvwmMoveOrRaise
+Mouse 1 I       A       FuncFvwmMoveOrIconify
+Mouse 2 I       A       Thumbnail
+Mouse 2 FST     A       Menu MenuFvwmWindowOps2 Nop
+Mouse 3 TSIF    A       RaiseLower
+
+######################## Initialization Functions ############################
+AddToFunc StartFunction
++ I Module FvwmAnimate
++ I Module FvwmButtons
++ I Module FvwmEvent
+
+AddToFunc InitFunction
++ I exec feh --bg-fill /home/andrew/Desktop/Autumn.jpg
++ I exec nm-applet
++ I exec volwheel
++ I exec qxkb
+
+# For some SM-s (like gnome-session) there is an internal background setter.
+AddToFunc SessionInitFunction
++ I Nop
+
+######################## Menus ###################
+DestroyMenu MenuFvwmRoot
+AddToMenu MenuFvwmRoot  "$[gt.Root Menu]"             Title
++                       "&T. eshell"             Exec exec emacsclient -c -e "(progn (eshell) (linum-mode 0) (set-window-fringes (selected-window) 0 0 nil))"
++                       "&B. XTerm"              Exec exec xterm
++                       ""              Nop
++                       "&U. $[gt.Utilities]"         Popup MenuFvwmUtilities
++                       ""              Nop
++                       "&M. $[gt.Fvwm Modules]"      Popup MenuFvwmModules
++                       "&W. $[gt.Window Operations]"   Popup MenuFvwmWindowOps
++                       ""              Nop
++                       "&F. $[gt.Refresh Screen]"   Refresh
++                       "&C. $[gt.Recapture Screen]" Recapture
++                       ""              Nop
++                       "&X. $[gt.Exit Fvwm]" Popup MenuFvwmQuitVerify
+
+DestroyMenu MenuFvwmUtilities
+AddToMenu MenuFvwmUtilities     "$[gt.Utilities]" Title
++                       "&N. WiFi Menu" Exec exec xterm -T wifi-menu -n wifi-menu -e sudo wifi-menu
++                       "&T. Top"       Exec exec xterm -T Top -n Top -e top
++                       "&M. Xman"      Exec exec xman
++                       ""              Nop
++                       "&S. Seamonkey"    Exec exec seamonkey
++                       "&N. Seamonkey (sandboxed)"    Exec firejail --seccomp --private seamonkey -no-remote
++                       "&W. Worker"     Exec exec worker
++                       "&R. Foxit Reader" Exec exec foxitreader
++                       "&L. LibreOffice"  Exec exec libreoffice
++                       "&B. VirtualBox"   Exec exec virtualbox
++                       ""              Nop
++                       "&D. Darktable" Exec exec darktable2
++                       "&G. GIMP"      Exec exec gimp
++                       ""              Nop
++                       "&E. Emacs"     Exec exec emacsclient -nc
++                       "&V. Vim (fallback)"  Exec exec xterm -T Vim -n Vim -e vim
++                       ""              Nop
++                       "&D. $[gt.Reset to Xdefaults]" Exec xrdb -load $HOME/.Xdefaults
+
+# The window Ops menus exhibit a different HotKey style.
+# There are 2 versions of the WindowOps Menu, meant to be bound to different
+# things.  Here is the "common" part:
+DestroyFunc FuncFvwmWindowCommon
+AddToFunc FuncFvwmWindowCommon
++ I AddToMenu $0 "$[gt.&Move]"              Move
++ I AddToMenu $0 "$[gt.&Resize]"            Resize
++ I AddToMenu $0 "$[gt.R&aise]"             Raise
++ I AddToMenu $0 "$[gt.&Lower]"             Lower
++ I AddToMenu $0 "$[gt.(De)&Iconify]"       Thumbnail
++ I AddToMenu $0 "$[gt.(Un)&Stick]"         Stick
++ I AddToMenu $0 "$[gt.(Un)Ma&ximise]"      Maximize
++ I AddToMenu $0 ""                 Nop
++ I AddToMenu $0 "$[gt.&Delete]"            Delete
++ I AddToMenu $0 "$[gt.&Close]"             Close
++ I AddToMenu $0 "$[gt.Destroy]"            Destroy
++ I AddToMenu $0 ""                 Nop
+
+# First windowops menu, bound to:
+# mouse 2 on root
+# Root menu
+DestroyMenu MenuFvwmWindowOps
+AddToMenu MenuFvwmWindowOps     "$[gt.Window Operations]"    Title
+FuncFvwmWindowCommon MenuFvwmWindowOps
++ "$[gt.Re&fresh Window]" RefreshWindow
+
+# Second windowops menu, bound to:
+# any mouse on titlebar button 1
+# mouse 2 on frame, side or titlebar
+DestroyMenu MenuFvwmWindowOps2
+AddToMenu MenuFvwmWindowOps2
+FuncFvwmWindowCommon MenuFvwmWindowOps2
++ Scroll&Bar       Module FvwmScroll 2 2
++ "&$[gt.Print]"           FuncFvwmPrint
++ "$[gt.Print Re&verse]" FuncFvwmPrintReverse
+
+DestroyMenu MenuFvwmModules
+AddToMenu MenuFvwmModules "$[gt.Fvwm Modules]"        Title
++ "&1. $[gt.Control Animation]" Popup  MenuFvwmAnimate
++ "&B. Button-Bar"        Module FvwmButtons
++ "&O. IconBox"           FuncFvwmConfigureIconBox
++ "&F. Forms"             Popup  MenuFvwmForms
++ "&I. Identify"          Module FvwmIdent
++ "&M. IconMan"           Module FvwmIconMan
++ "&N. Banner"            Module FvwmBanner
++ "&C. Console"           Module FvwmConsole
++ "&P. Pager"             Module FvwmPager 0 0
++ "&2. Pager (2 $[gt.desks])"   Module FvwmPager 0 1
++ "&R. Backer"            Module FvwmBacker
++ "&S. ScrollBar"         Module FvwmScroll 50 50
++ "&T. FvwmTaskBar"       Module FvwmTaskBar
++ "&U. AutoRaise"         Module FvwmAuto 200 Raise Nop
++ "&W. WinList"           Module FvwmWinList
++ "&X. $[gt.Stop Module Menu]"  Popup  MenuFvwmStopModule
+
+DestroyMenu MenuFvwmStopModule
+AddToMenu MenuFvwmStopModule "$[gt.Stop Fvwm Modules]" Title
++ "&B. $[gt.Stop] Button-Bar"  KillModule FvwmButtons
++ "&O. $[gt.Stop] IconBox"     KillModule FvwmIconBox
++ "&M. $[gt.Stop] IconMan"     KillModule FvwmIconMan
++ "&P. $[gt.Stop] Pager"       KillModule FvwmPager
++ "&R. $[gt.Stop] Backer"      KillModule FvwmBacker
++ "&S. $[gt.Stop] ScrollBar"   KillModule FvwmScroll
++ "&T. $[gt.Stop] FvwmTaskBar" KillModule FvwmTaskBar
++ "&U. $[gt.Stop] AutoRaise"   KillModule FvwmAuto
++ "&W. $[gt.Stop] WinList"     KillModule FvwmWinList
+
+DestroyMenu MenuFvwmForms
+AddToMenu MenuFvwmForms
++ "&C. Capture"       Module FvwmForm FvwmForm-Capture
++ "&D. Form Defaults" Module FvwmForm FvwmForm-Form
++ "&R. Rlogin"        Module FvwmForm FvwmForm-Rlogin
++ "&P. RootCursor"    Module FvwmForm FvwmForm-RootCursor
++ "&S. Setup"         Module FvwmForm FvwmForm-Setup
++ "&T. Talk Form"     Module FvwmForm FvwmForm-Talk
++ "&Q. QuitVerify"    Module FvwmForm FvwmForm-QuitVerify
+
+# Configure and start using an iconbox on the fly
+DestroyFunc FuncFvwmConfigureIconBox
+AddToFunc FuncFvwmConfigureIconBox
++ I Module FvwmIconBox
++ I Style     *  NoIcon
+
+DestroyMenu MenuFvwmQuitVerify
+AddToMenu MenuFvwmQuitVerify "$[gt.Really Quit Fvwm?]" Title
++ "&Q. $[gt.Yes, really quit]" Quit
++ "&N. $[gt.No, never mind]"   Nop
++ ""                     Nop
++ "&R. $[gt.Restart Fvwm]"          Restart
++ "&X. $[gt.Drop to Xterm]"    Restart xterm -n '"X Console"' -T '"X Console"'
+
+######################## Sample Functions ##########################
+
+DestroyFunc FuncFvwmMoveOrRaise
+AddToFunc FuncFvwmMoveOrRaise
++ I Raise
++ M Move
++ D Lower
+
+DestroyFunc FuncFvwmMaximize
+AddToFunc FuncFvwmMaximize
++ M Maximize   0 100
++ H Maximize   0 100
++ C Maximize   0  80
++ D Maximize 100 100
+
+DestroyFunc FuncFvwmMoveOrIconify
+AddToFunc FuncFvwmMoveOrIconify
++ I Raise
++ M Move
++ D Iconify
+
+DestroyFunc FuncFvwmResizeOrRaise
+AddToFunc FuncFvwmResizeOrRaise
++ I Raise
++ M Resize
++ D Lower
+
+DestroyFunc FuncFvwmPrint
+AddToFunc FuncFvwmPrint
++ I Raise
++ I Exec xdpr -id $w
+
+DestroyFunc FuncFvwmPrintReverse
+AddToFunc FuncFvwmPrintReverse
++ I Raise
++ I Exec xdpr 1/2 -h -rv -id $w
+
+DestroyFunc FuncFvwmFocusPolicyChange
+AddToFunc FuncFvwmFocusPolicyChange
++ I Style * $0
++ I Recapture
+
+# Generate thumbnails for iconification
+DestroyFunc Thumbnail
+AddToFunc Thumbnail
++ I Raise
++ I SetEnv Icon-$[w.id] $[w.iconfile]
++ I ThisWindow (!Shaded Iconifiable !Iconic) PipeRead \
+    "xwd -silent -id $[w.id] | convert -scale $$(($[w.width]/5)) -frame 1x1 \
+     -mattecolor black -quality 0 xwd:- png:/home/andrew/.fvwm/tmp/icon.tmp.$[w.id].png \
+     && echo Nop"
++ I TestRc (Match) Test (f $[fvwm_icon]/$[w.iconfile], f /home/andrew/.fvwm/tmp/icon.tmp.$[w.id].png) \
+    PipeRead "composite -geometry +2+4 \
+    $[fvwm_icon]/$[w.iconfile] /home/andrew/.fvwm/tmp/icon.tmp.$[w.id].png \
+    /home/andrew/.fvwm/tmp/icon.tmp.$[w.id].png && \
+    echo WindowStyle IconOverride, Icon /home/andrew/.fvwm/tmp/icon.tmp.$[w.id].png || echo Nop"
++ I TestRc (NoMatch) WindowStyle IconOverride, Icon /home/andrew/.fvwm/tmp/icon.tmp.$[w.id].png
++ I Iconify
+
+# Delete thumbnails when they are no longer necessary
+# Bring cursor to center of window on uniconifying
+DestroyFunc DeThumbnail
+AddToFunc DeThumbnail
++ I PipeRead "echo WindowStyle Icon \\$\\[Icon-$[w.id]\\]"
++ I UnsetEnv Icon-$[w.id]
++ I Exec rm -f /home/andrew/.fvwm/tmp/icon.tmp.$[w.id].png
++ I WarpToWindow 50 50
+
+DestroyModuleConfig FvwmEvent: *
+*FvwmEvent: deiconify DeThumbnail
+
+# Move and resize functions
+DestroyFunc MoveWindowUp
+AddToFunc MoveWindowUp
++ I Move w0 w-20p
++ I CursorMove 0 -20p
+
+DestroyFunc MoveWindowDown
+AddToFunc MoveWindowDown
++ I Move w0 w+20p
++ I CursorMove 0 +20p
+
+DestroyFunc MoveWindowLeft
+AddToFunc MoveWindowLeft
++ I Move w-20p w0
++ I CursorMove -20p 0
+
+DestroyFunc MoveWindowRight
+AddToFunc MoveWindowRight
++ I Move w+20p w0
++ I CursorMove +20p 0
+
+DestroyFunc MoveWindowToTop
+AddToFunc MoveWindowToTop
++ I Move w0 0
++ I WarpToWindow 50 1
++ I FlipFocus
+
+DestroyFunc MoveWindowToBottom
+AddToFunc MoveWindowToBottom
++ I Move w0 -0
++ I WarpToWindow 50 99
++ I FlipFocus
+
+DestroyFunc MoveWindowToLeft
+AddToFunc MoveWindowToLeft
++ I Move 0 w0
++ I WarpToWindow 1 50
++ I FlipFocus
+
+DestroyFunc MoveWindowToRight
+AddToFunc MoveWindowToRight
++ I Move -0 w0
++ I WarpToWindow 99 50
++ I FlipFocus
+
+DestroyFunc ResizeWindowUp
+AddToFunc ResizeWindowUp
++ I Resize w0 w-20p
++ I CursorMove 0 -10p
+
+DestroyFunc ResizeWindowDown
+AddToFunc ResizeWindowDown
++ I Resize w0 w+20p
++ I CursorMove 0 +10p
+
+DestroyFunc ResizeWindowLeft
+AddToFunc ResizeWindowLeft
++ I Resize w-20p w0
++ I CursorMove -10p 0
+
+DestroyFunc ResizeWindowRight
+AddToFunc ResizeWindowRight
++ I Resize w+20p w0
++ I CursorMove +10p 0
+
+DestroyFunc TileLeft
+AddToFunc TileLeft
++ I ThisWindow (!Shaded, !Iconic) Maximize 50 100
++ I ThisWindow (Maximized, !Shaded, !Iconic) Move +0 +0
++ I WarpToWindow 50 50
+
+DestroyFunc TileRight
+AddToFunc TileRight
++ I ThisWindow (!Shaded, !Iconic) Maximize 50 100
++ I ThisWindow (Maximized, !Shaded, !Iconic) Move -0 +0
++ I WarpToWindow 50 50
+
+DestroyFunc ShrinkFullscreenPlayer
+AddToFunc ShrinkFullscreenPlayer
++ I Resize 614p 384p
++ I ThisWindow (!Sticky) Stick
++ I Move -0 w0
+
+# Read config files for modules:
+read ConfigFvwmBacker
+read ConfigFvwmButtons
+read ConfigFvwmIconBox
+read ConfigFvwmIconMan
+read ConfigFvwmIdent
+read ConfigFvwmPager
+read ConfigFvwmScroll
+read ConfigFvwmTaskBar
+read ConfigFvwmWinList

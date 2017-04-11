@@ -1,0 +1,32 @@
+################## FvwmButtons button-bar ################################
+KillModule FvwmButtons
+DestroyModuleConfig FvwmButtons: *
+*FvwmButtons: Geometry 900x210-1-1
+*FvwmButtons: Back lightyellow2
+*FvwmButtons: (Frame 0, Padding 1 1, Container(Rows 8 Columns 17 Frame 1 Padding 0 0))
+*FvwmButtons: (5x7, Frame 2, Swallow "FvwmIconMan" "Module FvwmIconMan")
+*FvwmButtons: (5x7, Frame 2, Swallow(UseOld,NoHints,Respawn) "xterm" `Exec exec xterm -bg lightyellow2 -fg black -e env PS1="> " bash --norc`)
+*FvwmButtons: (3x7, Frame 2, Swallow(UseOld,NoHints,Respawn) "procmeter3" `Exec exec procmeter3 --startup.order=Date_Time.Time_HMS Date_Time.Date_DM Statistics.CPU-g Memory.Mem_Used-g Network.Pkt_wlp3s0-g Battery.BAT0_remaining --resources.background=lightyellow2 --resources.label-position=none --Statistics.CPU.foreground=red4 --Memory.Mem_Used.foreground=green4 --Network.Pkt_wlp3s0.foreground=blue3`)
+*FvwmButtons: (3x1, Frame 0, Swallow "stalonetray" `Exec exec stalonetray`)
+*FvwmButtons: (1x1, Frame 0, Swallow "xeyes" `Exec exec xeyes`)
+*FvwmButtons: (4x6, Frame 2, Swallow(UseOld) "Inline" "Module FvwmPager Inline 0 3")
+*FvwmButtons: (End)
+
+DestroyModuleConfig Inline: *
+*Inline: Rows 2
+*Inline: Columns 2
+*Inline: Font none
+*Inline: SmallFont 5x8
+*Inline: Back lightyellow2
+DestroyModuleConfig FvwmPagerSubPanel: *
+*FvwmPagerSubPanel: Rows 5
+*FvwmPagerSubPanel: Columns 1
+
+# To include the panel in a button
+#DestroyModuleConfig SubPanel 
+#*SubPanel: (1x2, Frame 0, Swallow(UseOld) "FvwmPager" "Module FvwmPager 5 1")
+#*SubPanel: (Icon my_lock.xpm, Action Exec xlock)
+#*SubPanel: (Icon my_move.xpm, Action Move)
+
+# Use this command to start it:
+#Module FvwmButtons

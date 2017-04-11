@@ -1,0 +1,32 @@
+bookmarks {
+	entry {
+		name = "/home/andrew/Programming/OpenRec";
+		useparent = false;
+		alias = "OpenRec";
+	}
+	entry {
+		name = "/home/andrew/School/English";
+		useparent = false;
+		alias = "English";
+	}
+	entry {
+		name = "/home/andrew/School/Latin";
+		useparent = false;
+		alias = "Latin";
+	}
+	entry {
+		name = "/home/andrew/School/Photography";
+		useparent = false;
+		alias = "Photography";
+	}
+	entry {
+		name = "/home/andrew/School/Physics";
+		useparent = false;
+		alias = "Physics";
+	}
+	entry {
+		name = "/home/andrew/.local/share/fonts";
+		useparent = false;
+		alias = "Fonts";
+	}
+}
