@@ -16,7 +16,7 @@ MenuStyle * Font "xft:overpass:size=15"
 ColormapFocus FollowsMouse
 
 Colorset 1 RootTransparent buffer, fg #262626, bg average, \
-  Tint #d7d6b1 75, bgTint #d7d6b1 75
+  Tint #d7d6b1 80, bgTint #d7d6b1 80
 Colorset 2 RootTransparent buffer, fg #262626, bg average, \
   Tint #d7d6b1 10, bgTint #d7d6b1 10
 
@@ -25,6 +25,17 @@ BorderStyle Inactive Colorset 2
 BorderStyle Active   Colorset 1
 TitleStyle AllInactive Colorset 2
 TitleStyle AllActive   Colorset 1
+
+ButtonStyle 1 MiniIcon
+ButtonStyle 2 17 20x20@2 30x20@2 50x40@2 70x20@2 80x20@2 80x30@0 60x50@0 80x70@2 80x80@0 70x80@0 50x60@0 30x80@0 20x80@0 20x70@0 40x50@2 20x30@0 20x20@2
+ButtonStyle 3 13 60x20@0 60x40@0 80x40@2 80x60@0 60x60@0 60x80@0 40x80@0 40x60@2 20x60@0 20x40@2 40x40@2 40x20@2 60x20@2
+ButtonStyle 4 11 80x20@2 45x20@2 55x30@2 30x55@2 20x45@2 20x80@2 55x80@0 45x70@0 70x45@0 80x55@0 80x20@0
+ButtonStyle 5 16 10x5@2 90x5@2 90x20@0 40x20@0 40x26@0 60x26@2 60x60@0 80x60@0 50x90@0 20x60@2 40x60@2 40x26@2 60x26@2 60x20@0 10x20@0 10x5@2
+ButtonStyle 6 12 50x10@2 25x35@2 40x35@2 40x60@2 25x60@2 50x85@2 75x60@0 60x60@0 60x35@0 75x35@0 50x10@0 50x10@2
+ButtonStyle 7 15 10x5@2 90x5@2 90x20@0 50x20@0 50x25@0 80x55@0 60x55@0 60x90@0 40x90@0 40x55@2 20x55@2 50x25@2 50x20@0 10x20@0 10x5@2
+ButtonStyle 8 12 10x50@2 35x25@2 35x40@2 65x40@2 65x25@2 90x50@2 65x75@0 65x60@0 35x60@0 35x75@0 10x50@0 10x50@2
+ButtonStyle 9 8 80x40@2 50x40@2 50x20@2 20x50@2 50x80@0 50x60@0 80x60@0 80x40@0
+ButtonStyle 0 4 50x75@2 25x25@2 75x25@2 50x75@0
 ButtonStyle All -- UseTitleStyle
 
 # default Styles:
@@ -35,7 +46,7 @@ Style *           IconFont "xft:overpass:size=12"
 # Style *           ForeColor #d7d6b1, BackColor #262626
 Style *           BorderWidth 9, HandleWidth 9
 Style *           Icon unknown1.xpm, Color lightgrey/dimgrey
-Style *           MWMFunctions, MWMDecor, HintOverride
+Style *           MWMFunctions, HintOverride
 Style *           DecorateTransient, NoPPosition
 Style *           IconBox 0 -10 -280 -1
 Style *           FocusFollowsMouse, MouseFocusClickRaises
@@ -48,25 +59,19 @@ Style Fvwm*       NoTitle,  Sticky, WindowListSkip
 Style Fvwm*       BorderWidth 2, CirculateSkipIcon, CirculateSkip
 Style FvwmPager   StaysOnTop
 Style FvwmBanner  StaysOnTop
-Style FvwmButtons Icon toolbox.xpm, ClickToFocus
+Style FvwmButtons Icon toolbox.xpm, ClickToFocus, StaysOnTop
 
-# Styles for your common terminal emulator programs.
-# xterms and rxvts in a separate icon box:
-Style XTerm       Icon xterm.xpm, SloppyFocus, IconBox -70 1 -1 -140
-Style rxvt        Icon term.xpm, SloppyFocus, IconBox -70 1 -1 -140
-Style rxvt        MWMBorder, MWMButtons
+# Application icons
+SetEnv fvwm_icon $[FVWM_USERDIR]/icons
+ImagePath $[fvwm_icon]
 
-# Styles for various common programs:
-Style *lock       NoTitle, NoHandles, Sticky, WindowListSkip, ClickToFocus
-Style xbiff       NoTitle, Sticky, WindowListSkip, ClickToFocus
-Style xcalc       Icon xcalc.xpm, NoButton 2,ClickToFocus
-Style xmh         Icon mail1.xpm, NoIconTitle,StickyIcon
-Style xmh         NoButton 2
-Style xman        Icon xman.xpm, ClickToFocus
-Style xmag        Icon mag_glass.xpm, ClickToFocus
-Style xgraph      Icon graphs.xpm, ClickToFocus
-Style xmosaic     Color Green/Yellow, ClickToFocus
+Style Foxit*      MiniIcon mini.filestack.xpm
+Style urxvt       MiniIcon mini.term.xpm, SloppyFocus, IconBox -70 1 -1 -140
+Style urxvt       MWMBorder, MWMButtons
+Style Worker      MiniIcon mini.filemgr.xpm
 
+# Better Alt-Tab
+Key Tab          A       M       WindowList Root c c NoCurrentDeskTitle, NoGeometry, CurrentAtEnd, IconifiedAtEnd
 
 # some simple default key bindings:
 Key Next         A       SCM     Next [*] Focus
@@ -111,8 +116,18 @@ Mouse 3 R       A       WindowList
 
 #   for the title bar buttons:
 Mouse 0 1       A       Menu MenuFvwmWindowOps2 Close
-Mouse 0 2       A       FuncFvwmMaximize
-Mouse 0 4       A       Thumbnail
+Mouse 0 2       A       Close
+Mouse 0 3       A       Stick
+Mouse 0 4       A       Maximize growonlayers $[w.layer] -1 grow grow
+Mouse 1 4       A       Maximize 100 100
+Mouse 0 5       A       Lower
+Mouse 0 6       A       Maximize growonlayers $[w.layer] -1 0 grow
+Mouse 1 6       A       Maximize 0 100
+Mouse 0 7       A       Raise
+Mouse 0 8       A       Maximize growonlayers $[w.layer] -1 grow 0
+Mouse 1 8       A       Maximize 100 0
+Mouse 0 9       A       WindowShade West
+Mouse 0 0       A       Thumbnail
 
 #   for other parts of the window/borders/icons:
 Mouse 1 F       A       FuncFvwmResizeOrRaise
@@ -129,7 +144,7 @@ AddToFunc StartFunction
 + I Module FvwmEvent
 
 AddToFunc InitFunction
-+ I exec feh --bg-fill /home/andrew/Desktop/Autumn.jpg
++ I exec feh --bg-fill /home/andrew/Desktop/NYC.jpg
 + I exec nm-applet
 + I exec volwheel
 + I exec qxkb
@@ -141,7 +156,8 @@ AddToFunc SessionInitFunction
 ######################## Menus ###################
 DestroyMenu MenuFvwmRoot
 AddToMenu MenuFvwmRoot  "$[gt.Root Menu]"             Title
-+                       "&T. eshell"             Exec exec emacsclient -c -e "(progn (eshell) (linum-mode 0) (set-window-fringes (selected-window) 0 0 nil))"
++                       "&T. urxvt"              Exec exec urxvt
++                       "&E. eshell"             Exec exec emacsclient -c -e "(progn (eshell) (linum-mode 0) (set-window-fringes (selected-window) 0 0 nil))"
 +                       "&B. XTerm"              Exec exec xterm
 +                       ""              Nop
 +                       "&U. $[gt.Utilities]"         Popup MenuFvwmUtilities
@@ -160,12 +176,14 @@ AddToMenu MenuFvwmUtilities     "$[gt.Utilities]" Title
 +                       "&T. Top"       Exec exec xterm -T Top -n Top -e top
 +                       "&M. Xman"      Exec exec xman
 +                       ""              Nop
-+                       "&S. Seamonkey"    Exec exec seamonkey
-+                       "&N. Seamonkey (sandboxed)"    Exec firejail --seccomp --private seamonkey -no-remote
++                       "&F. Firefox"    Exec exec firefox-aurora
++                       "&S. Firefox (sandboxed)"    Exec firejail --seccomp --private firefox-aurora -no-remote
 +                       "&W. Worker"     Exec exec worker
 +                       "&R. Foxit Reader" Exec exec foxitreader
 +                       "&L. LibreOffice"  Exec exec libreoffice
-+                       "&B. VirtualBox"   Exec exec virtualbox
+                                        Nop
++                       "&B. VirtualBox"    Exec exec virtualbox
++                       "&P. VMware Player" Exec VMWARE_USE_SHIPPED_LIBS='yes' exec vmplayer
 +                       ""              Nop
 +                       "&D. Darktable" Exec exec darktable2
 +                       "&G. GIMP"      Exec exec gimp

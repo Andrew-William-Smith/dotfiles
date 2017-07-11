@@ -13,28 +13,34 @@
 
 ** Packages
 #+BEGIN_SRC emacs-lisp
-(defvar andrew/packages '(2048-game             ; Play a game of 2048.  Why not?
+(defvar andrew/packages '(ac-js2                ; auto-complete source for js2-mode
                           auctex                ; Enhancements for LaTeX
                           auto-complete         ; Auto-completion for most programming languages
                           autopair
                           darktooth-theme       ; Colour theme similar to gruvbox
+                          deft                  ; Notational Velocity in Emacs
+                          diminish              ; Hide certain minor modes from modeline
                           evil                  ; vim emulation
+                          evil-commentary       ; commentary.vim for evil-mode
                           evil-surround         ; surround.vim for evil-mode
+                          evil-vimish-fold      ; Use vimish-fold with vim keybindings
                           exec-path-from-shell  ; Use path variables from the shell (ZSH in my case)
                           git-gutter-fringe     ; Show git diff in fringe
                           jedi                  ; Enhance Python auto-completion and argument hinting
+                          js2-mode              ; Improved JavaScript mode
                           linum-relative        ; Relative line numbers, similar to vim's hybrid line numbering
                           magit                 ; git integration
                           mark-multiple         ; Multiple cursors
                           markdown-mode         ; Markdown support
-                          mu4e-alert            ; Notifications for new emails in mu4e; mu4e itself must be installed from Homebrew.
                           nyan-mode             ; Use Nyan Cat as a file position indicator.  Stupid, but surprisingly useful.
                           rainbow-delimiters    ; Colour-coordinate matching delimiters
                           rainbow-mode          ; Show colour strings in their actual colours
                           sr-speedbar           ; Dock the speedbar in the same frame as the file
                           swiper                ; Enhanced ido
                           twittering-mode       ; Browse twitter in Emacs
-                          w3m)                  ; Web browsing in Emacs
+                          vimish-fold           ; vim folding behaviour for Emacs
+                          w3m                   ; Web browsing in Emacs
+                          yasnippet)            ; Template system for Emacs
 "Default packages")
 #+END_SRC
 
@@ -82,16 +88,53 @@
   (setq frame-title-format '(buffer-file-name "%f" ("%b"))))
 #+END_SRC
 
-** Keybindings
+** Keybindings and keyboard
 #+BEGIN_SRC emacs-lisp
 (defalias 'yes-or-no-p 'y-or-n-p)                       ; Yay, laziness!
 (global-set-key (kbd "RET") 'newline-and-indent)        ; Sensical RET binding
+
+(quail-define-package
+ "better-english" "English" "£" t
+ "An input method for an alternate orthography for the English language."
+ nil t nil nil nil nil nil nil nil nil t)
+
+(quail-define-rules                                     ; Special bindings for custom input method
+ ("-"    "-")
+ ("-n"   "–")
+ ("-m"   "—")
+ ("a\\"  "ä")
+ ("e\\"  "ë")
+ ("i\\"  "ï")
+ ("o\\"  "ö")
+ ("u\\"  "ü")
+ ("A\\"  "Ä")
+ ("E\\"  "Ë")
+ ("I\\"  "Ï")
+ ("O\\"  "Ö")
+ ("U\\"  "Ü")
+ ("c\\"  "ç")
+ ("C\\"  "Ç")
+ ("s\\"  "ſ")
+ ("?!"   "‽")
+ ("!?"   "‽")
+ ("$b"   "£")
+ ("$c"   "¢")
+ ("..."  "…")
+ ("cccp" "☭")
+)
+
+; Use this input method where it is useful
+(add-hook 'text-mode-hook (lambda () (set-input-method "better-english")))
+(add-hook 'org-mode-hook (lambda () (set-input-method "better-english")))
+(add-hook 'LaTeX-mode-hook (lambda () (set-input-method "better-english")))
 #+END_SRC
 
 ** Font
 #+BEGIN_SRC emacs-lisp
-(add-to-list 'default-frame-alist '(font . "-PfEd-Fantasque Sans Mono-normal-normal-normal-*-19-*-*-*-m-0-iso10646-1" ))
-(set-face-attribute 'default t :font "-PfEd-Fantasque Sans Mono-normal-normal-normal-*-19-*-*-*-m-0-iso10646-1" )
+(set-language-environment "UTF-8")
+(set-default-coding-systems 'utf-8-unix)                                     ; Use Unicode as default encoding
+
+(set-face-attribute 'default nil :family "Fantasque Sans Mono" :height 147)  ; Use Fantasque Sans Mono by default
 #+END_SRC
 
 ** Buffer settings
@@ -103,6 +146,87 @@
 (setq column-number-mode t)                     ; Show column numbers
 (setq-default show-trailing-whitespace t)       ; Show trailing whitespace
 (global-hl-line-mode)                           ; Highlight the current line
+(setq-default indicate-buffer-boundaries 'right)        ; Show beginning, end, and continuation of buffer in fringe
+#+END_SRC
+
+** Modeline
+#+BEGIN_SRC emacs-lisp
+(setq-default mode-line-format
+      (list ""
+;;            ;; Show progress through file
+;;            '(:eval (let ((fp (/ (float (point)) (float (point-max)))))
+;;                      (cond
+;;                       ((< fp 0.125) "▁")
+;;                       ((< fp 0.250) "▂")
+;;                       ((< fp 0.375) "▃")
+;;                       ((< fp 0.500) "▄")
+;;                       ((< fp 0.625) "▅")
+;;                       ((< fp 0.750) "▆")
+;;                       ((< fp 0.875) "▇")
+;;                       ((> fp 0.875) "█"))))
+            '(:eval (pcase evil-state
+                      ('normal   (propertize "█" 'help-echo "Normal mode"))
+                      ('insert   (propertize "▟" 'help-echo "Insert mode"))
+                      ('replace  (propertize "▚" 'help-echo "Replace mode"))
+                      ('visual   (propertize "▜" 'help-echo "Visual mode"))
+                      ('operator (propertize "▓" 'help-echo "Operator mode"))
+                      (_         (propertize "░" 'help-echo "evil-mode inactive"))))
+            '(:eval (if (frame-parameter nil 'client)
+                        (propertize "█" 'help-echo "emacsclient frame")
+                      (propertize "░" 'help-echo "independent frame")))
+            '(:eval (if buffer-read-only
+                        (propertize "░" 'help-echo "Buffer is read-only")
+                      (propertize "█" 'help-echo "Buffer is writable")))
+            '(:eval (if (buffer-modified-p)
+                        (propertize "░" 'help-echo "Buffer has unsaved changes")
+                      (propertize "█" 'help-echo "Buffer is saved")))
+            "  "
+            '(:eval (if (buffer-file-name)
+                        (concat (mapconcat 'identity
+                                           (mapcar (lambda (dir)
+                                                     (if (string-prefix-p "." dir)
+                                                         (propertize (substring dir 0 2) 'help-echo dir)      ; Show first letter and dot of hidden directories
+                                                         (propertize (substring dir 0 1) 'help-echo dir)))    ; Otherwise, just first letter
+                                                   (butlast (split-string
+                                                    (replace-regexp-in-string
+                                                     (getenv "HOME") "~" default-directory)
+                                                    "/"))) "/") "/")))
+            '(:eval (propertize "%b" 'face 'bold
+                                'help-echo (buffer-file-name)))
+            '(:eval (if (vc-backend buffer-file-name)
+                        (concat ":" (car (vc-git-branches)))))
+            " — "
+            '(:eval mode-name)
+            "  ("
+            '(:eval "%l,%c")
+            '(:eval (let ((ccode (if (char-after)
+                                     (encode-char (char-after) 'unicode))))
+                      (if (and
+                           (or (< ccode 32)
+                               (> ccode 126))    ; Ignore Latin letters, numbers, punctuation
+                           (/= ccode 10))        ; Ignore newlines
+                          (format " U+%04X" ccode))))
+            ")   "
+            '(:eval (list (nyan-create)))
+            "  "
+            '(:eval (propertize (format-mode-line minor-mode-alist)
+                                'font-lock-face '(:foreground "#847568")))
+))
+
+(setq nyan-bar-length 16)
+#+END_SRC
+
+** Scratch buffer heading
+#+BEGIN_SRC emacs-lisp
+(setq initial-scratch-message (format ";; ╔════════════════════════════════════════════════════╤══════════════════╗
+;; ║ EMACS SCRATCH BUFFER                               │ GNU Emacs %s ║
+;; ╟────────────────────────────────────────────────────┴──────────────────╢
+;; ║ This buffer is for text that is not saved, and for Lisp evaluation.   ║
+;; ║ To create a file, visit it with C-x C-f and enter text in its buffer. ║
+;; ║                                                                       ║
+;; ║ evil-mode is currently active.  Use vim keybindings for navigation.   ║
+;; ╚═══════════════════════════════════════════════════════════════════════╝\n"
+                                      emacs-version))
 #+END_SRC
 
 ** Better window navigation
@@ -122,11 +246,18 @@
 #+BEGIN_SRC emacs-lisp
 (setq-default tab-width 2
       indent-tabs-mode nil)
+
+(add-hook 'js-mode-hook
+          (lambda ()
+            (setq tab-width 2
+                  indent-tabs-mode nil
+                  js-indent-level 2)))
 #+END_SRC
 
 ** Prettify symbols
 #+BEGIN_SRC emacs-lisp
 (global-prettify-symbols-mode +1)
+(setq prettify-symbols-unprettify-at-point 'right-edge)    ; Show underlying text at right edge
 
 (require 'tex)
 (add-hook 'LaTeX-mode-hook
@@ -152,16 +283,35 @@
             (push '("=="                . ?≡) prettify-symbols-alist)
             (push '("!="                . ?≢) prettify-symbols-alist)
             (push '("self"              . ?∫) prettify-symbols-alist)
+            (push '("for"               . ?∀) prettify-symbols-alist)  ; new
             (push '("in"                . ?∈) prettify-symbols-alist)
             (push '("not in"            . ?∉) prettify-symbols-alist)
+            (push '("if"                . ?⟺) prettify-symbols-alist)  ; new
+            (push '("elif"              . ?⟷) prettify-symbols-alist)  ; new
+            (push '("else"              . ?⟹) prettify-symbols-alist)  ; new
+            (push '("return"            . ?⟼) prettify-symbols-alist)  ; new
+            (push '("yield"             . ?⟻) prettify-symbols-alist)  ; new
+            (push '("def"               . ?𝒟) prettify-symbols-alist)  ; new
+            (push '("class"             . ?𝒞) prettify-symbols-alist)  ; new
             (push '("<="                . ?≤) prettify-symbols-alist)
             (push '(">="                . ?≥) prettify-symbols-alist)
             (push '("and"               . ?∧) prettify-symbols-alist)
             (push '("or"                . ?∨) prettify-symbols-alist)
+            (push '("True"              . ?𝑇) prettify-symbols-alist)  ; new
+            (push '("False"             . ?𝐹) prettify-symbols-alist)  ; new
+            (push '("None"              . ?∅) prettify-symbols-alist)  ; new
+            (push '("int"               . ?ℤ) prettify-symbols-alist)  ; new
+            (push '("float"             . ?ℝ) prettify-symbols-alist)  ; new
+            (push '("str"               . ?𝕊) prettify-symbols-alist)  ; new
+            (push '("list"              . ?𝕃) prettify-symbols-alist)  ; new
+            (push '("tuple"             . ?𝕋) prettify-symbols-alist)  ; new
+            (push '("dict"              . ?𝔻) prettify-symbols-alist)  ; new
             (push '("float('inf')"      . ?∞) prettify-symbols-alist)
             (push '("float(\"inf\")"    . ?∞) prettify-symbols-alist)
             (push '("not"               . ?¬) prettify-symbols-alist)
-            (push '("lambda"            . ?λ) prettify-symbols-alist)))
+            (push '("lambda"            . ?λ) prettify-symbols-alist)
+            (set-fontset-font "fontset-default" '(#x209f . #x2b5e) "FreeSerif")
+            (set-fontset-font "fontset-default" '(#x1d400 . #x1d7ff) "FreeSerif")))
 
 (add-hook 'c-mode-hook
           (lambda ()
@@ -209,11 +359,20 @@
 (global-set-key (kbd "<f12>") 'andrew/open-quick-calc)
 #+END_SRC
 
+** deft
+#+BEGIN_SRC emacs-lisp
+(setq deft-extensions '("org"))                 ; Use org-mode for notes
+(setq deft-directory "~/Dropbox/deft")          ; Store notes in Dropbox
+(setq deft-use-filter-string-for-filename t)    ; Name files after headers
+#+END_SRC
+
 ** evil-mode
 #+BEGIN_SRC emacs-lisp
 (setq evil-want-C-u-scroll t)   ; Use C-u to scroll up half a page, like in vim.
 (evil-mode)
+(evil-commentary-mode)          ; Enable evil-commentary everywhere
 (global-evil-surround-mode 1)   ; Enable evil-surround everywhere
+(evil-vimish-fold-mode 1)       ; Enable evil-vimish-fold everywhere
 #+END_SRC
 
 ** git-gutter-fringe
@@ -222,6 +381,17 @@
 (global-git-gutter-mode t)
 (setq git-gutter:update-interval 1)
 (setq git-gutter-fr:side 'right-fringe)
+
+; Define indicators
+(fringe-helper-define 'git-gutter-fr:added '(center repeated)
+  "XXX.....")
+(fringe-helper-define 'git-gutter-fr:modified '(center repeated)
+  "XXX.....")
+(fringe-helper-define 'git-gutter-fr:deleted 'bottom
+  "X......."
+  "XX......"
+  "XXX....."
+  "XXXX....")
 #+END_SRC
 
 ** ivy
@@ -231,7 +401,7 @@
 ; Keybindings
 (global-set-key (kbd "C-s") 'swiper)
 (define-key ivy-minibuffer-map (kbd "<return>") 'ivy-alt-done)
-(define-key ivy-minibuffer-map (kbd "<tab>")    'ivy-alt-done)
+(define-key ivy-minibuffer-map (kbd "<tab>") 'ivy-alt-done)
 #+END_SRC
 
 ** jedi
@@ -242,18 +412,28 @@
 (setq jedi:complete-on-dot t)                   ; Suggest completions when a period is inserted
 #+END_SRC
 
+** js2-mode
+#+BEGIN_SRC emacs-lisp
+(require 'js2-mode)                                      ; Load js2-mode
+(add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))    ; Enable js2-mode for all JS files
+
+(add-hook 'js2-mode-hook 'ac-js2-mode)                   ; Use ac-js2 for all js2-mode buffers
+(setq ac-js2-evaluate-calls t)                           ; Evaluate local code for completion
+#+END_SRC
+
 ** linum-relative
 #+BEGIN_SRC emacs-lisp
 (global-linum-mode t)
 (require 'linum-relative)
 (setq linum-relative-current-symbol "")
+(setq linum-relative-format "%4s")
 (linum-relative-global-mode)
 #+END_SRC
 
 ** mark-multiple
 #+BEGIN_SRC emacs-lisp
-(define-key evil-visual-state-map (kbd "M-j") 'mark-next-like-this)
-(define-key evil-visual-state-map (kbd "M-k") 'mark-previous-like-this)
+(define-key evil-visual-state-map (kbd "M-n") 'mark-next-like-this)
+(define-key evil-visual-state-map (kbd "M-p") 'mark-previous-like-this)
 #+END_SRC
 
 ** mu4e
@@ -267,6 +447,10 @@
 (setq message-send-mail-function 'smtpmail-send-it
       starttls-use-gnutls t
       smtpmail-debug-info t)
+
+;; Change reply string to "On DAY DATE at TIME (TZ), SENDER <ADDRESS> wrote:"
+(setq message-citation-line-format "On %a %d %b %Y at %R (%Z), %f wrote:\n")
+(setq message-citation-line-function 'message-insert-formatted-citation-line)
 #+END_SRC
 
 *** Account setup
@@ -282,49 +466,37 @@
            :vars '((user-mail-address . "andy.bill.smith@gmail.com")
                    (user-full-name . "Andrew Smith")
                    (mu4e-compose-signature . "Andrew Smith\n")
-                   (mu4e-drafts-folder . "/Gmail/drafts")
-                   (mu4e-sent-folder . "/Gmail/sent")
-                   (mu4e-trash-folder . "/Gmail/trash")
+                   (mu4e-drafts-folder . "/Gmail/[Gmail].Drafts")
+                   (mu4e-sent-folder . "/Gmail/[Gmail].Sent Mail")
+                   (mu4e-trash-folder . "/Gmail/[Gmail].Trash")
                    (smtpmail-starttls-credentials . (("smtp.gmail.com" 587 nil nil)))
                    (smtpmail-default-smtp-server . "smtp.gmail.com")
                    (smtpmail-smtp-server . "smtp.gmail.com")
                    (smtpmail-smtp-service . 587)))
          ,(make-mu4e-context
-           :name "School"
-           :enter-func (lambda () (mu4e-message "Switch to School context"))
+           :name "Primary"
+           :enter-func (lambda () (mu4e-message "Switch to Primary context"))
            :match-func (lambda (msg)
                          (when msg
                            (mu4e-message-contact-field-matches msg
-                                                               :to "18smitha@smtexas.org")))
-           :vars '((user-mail-address . "18smitha@smtexas.org")
+                                                               :to "aws@awsmith.us")))
+           :vars '((user-mail-address . "aws@awsmith.us")
                    (user-full-name . "Andrew Smith")
-                   (mu4e-compose-signature . "Andrew Smith, Class of 2018\n")
-                   (mu4e-drafts-folder . "/School/Drafts")
-                   (mu4e-sent-folder . "/School/Sent")
-                   (mu4e-trash-folder . "/School/Trash")
-                   (smtpmail-starttls-credentials . (("localhost" 1025 nil nil)))
-                   (smtpmail-default-smtp-server . "localhost")
-                   (smtpmail-smtp-server . "localhost")
-                   (smtpmail-smtp-service . 1025)))))
-#+END_SRC
-
-*** Notifications
-#+BEGIN_SRC emacs-lisp
-(add-hook 'after-init-hook #'mu4e-alert-enable-mode-line-display)    ; Always display alerts in the modeline
-(setq mu4e-alert-interesting-mail-query                              ; Don't notify about messages in non-essential directories
-      (concat
-       "flag:unread"
-       " AND NOT flag:trashed"
-       " AND NOT maildir:"
-       "\"/Gmail/[Gmail].All Mail\""
-       "\"/Gmail/[Gmail].Trash\""))
+                   (mu4e-compose-signature . "Andrew Smith\n")
+                   (mu4e-drafts-folder . "/Primary/Drafts")
+                   (mu4e-sent-folder . "/Primary/Sent")
+                   (mu4e-trash-folder . "/Primary/Trash")
+                   (smtpmail-starttls-credentials . (("smtp.zoho.com" 587 nil nil)))
+                   (smtpmail-default-smtp-server . "smtp.zoho.com")
+                   (smtpmail-smtp-server . "smtp.zoho.com")
+                   (smtpmail-smtp-service . 587)))))
 #+END_SRC
 
 *** Shortcuts
 #+BEGIN_SRC emacs-lisp
 (setq mu4e-maildir-shortcuts
       '(("/Gmail/INBOX" . ?g)
-        ("/School/INBOX" . ?s)))
+        ("/Primary/INBOX" . ?p)))
 #+END_SRC
 
 ** org-mode
@@ -377,16 +549,8 @@
 
 *** Formatting
 #+BEGIN_SRC emacs-lisp
-(setq-default org-hide-emphasis-markers t)                ; Hide org-mode formatting characters
-(setq-default org-todo-keyword-faces '(("⎅" . (:family "Apple Symbols" :foreground "#FB4933"))
-                                       ("□" . (:family "Apple Symbols" :foreground "#FB4933"))
-                                       ("⧉" . (:family "Apple Symbols" :foreground "#FB4933"))
-                                       ("⧆" . (:family "Apple Symbols" :foreground "#FB4933"))
-                                       ("⊟" . (:family "Apple Symbols" :foreground "#FB4933"))
-                                       ("⧈" . (:family "Apple Symbols" :foreground "#FB4933"))
-                                       ("⧰" . (:family "Apple Symbols" :foreground "#FABD2F"))
-                                       ("⧯" . (:family "Apple Symbols" :foreground "#84BB26"))
-                                       ("⧮" . (:family "Apple Symbols" :foreground "#84BB26"))))
+; To-do colours
+(setq org-todo-keyword-faces '(("展" . "#fd8c64") ("印" . "#f9f104") ("提" . "#d7d6b1")))
 #+END_SRC
 
 ** rainbow-delimiters-mode
@@ -428,3 +592,17 @@
             (let ((buffer-read-only nil))
               (delete-trailing-whitespace))))
 #+END_SRC
+
+** yasnippet
+#+BEGIN_SRC emacs-lisp
+(require 'yasnippet)
+#+END_SRC
+
+** diminish
+#+BEGIN_SRC emacs-lisp
+(require 'diminish)
+(diminish 'evil-commentary-mode)
+(diminish 'evil-vimish-fold-mode)
+(diminish 'undo-tree-mode)
+#+END_SRC
+

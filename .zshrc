@@ -5,14 +5,20 @@ setopt AUTO_CD
 setopt CORRECT
 setopt PUSHD_SILENT
 setopt PUSHD_TO_HOME
+
 setopt NO_BEEP
-setopt NO_CLOBBER
 setopt NO_CASE_GLOB
 setopt NUMERIC_GLOB_SORT
 setopt EXTENDED_GLOB
+
+setopt NO_CLOBBER
+setopt RM_STAR_WAIT
+
 bindkey -v
 autoload -U compinit && compinit
-zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+# zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+zstyle ':completion:*' menu select
+zstyle ':completion:*' verbose yes
 
 autoload -U colors && colors
 function genprompt() {
@@ -38,7 +44,7 @@ function genprompt() {
   fi
 
   currtime="${exitappend}${HISTCMD} at `date "+%H:%M:%S"` (${timer_show}s)"
-  newprompt="%{${fg[cyan]}%}${currdir}%{${reset_color}%}${gitappend} "
+  newprompt="%B%{${fg[cyan]}%}${currdir}%b%{${reset_color}%}${gitappend} "
 
   for ((i=${#currdir}-1+${#gitappendcalc}; i<=COLUMNS-4-${#currtime}; i+=1)) do
     newprompt="${newprompt}─"
@@ -57,19 +63,40 @@ EDITOR="vim"
 COMPLETION_WAITING_DOTS="true"
 
 alias emacs='open -a /Applications/Emacs.app $1'
-alias fuck='sudo $(fc -ln -1)'
 
-source ~/.zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
+# Automatic sudo (M-e)
+insert_sudo() { zle beginning-of-line; zle -U "sudo " }
+zle -N insert-sudo insert_sudo
+bindkey "^[e" insert-sudo
 
 export CFLAGS=-Qunused-arguments
 export CPPFLAGS=-Qunused-arguments
-export PATH=/usr/local/Cellar/qt/4.8.6:/Users/andrew/Documents/School/Robotics/ConVEX\ Toolchain/gcc-arm-none-eabi-4_9-2015q3-20150921-mac/gcc-arm-none-eabi-4_9-2015q3/bin:/Users/andrew/.node/bin:$PATH
-export PKG_CONFIG_PATH=/usr/local/Cellar/libffi/3.0.13/lib/pkgconfig/
-export PYTHONPATH=/usr/local/lib/python2.7:/usr/local/Cellar/pyqt/4.11.1/lib/python2.7
+
+# Fix for VMware Player on Arch
+export VMWARE_USE_SHIPPED_LIBS='yes'
+
+# Automatically download plugins
+if [[ ! -a ~/.zshplug ]]; then
+    echo "Downloading ZSH plugins..."
+    sleep 5
+    mkdir ~/.zshplug
+fi
+if [[ ! -a ~/.zshplug/zsh-autosuggestions ]]; then
+    git clone "https://github.com/zsh-users/zsh-autosuggestions.git" ~/.zshplug/zsh-autosuggestions
+fi
+if [[ ! -a ~/.zshplug/zsh-syntax-highlighting ]]; then
+    git clone "https://github.com/zsh-users/zsh-syntax-highlighting.git" ~/.zshplug/zsh-syntax-highlighting
+fi
+
+source ~/.zshplug/zsh-autosuggestions/zsh-autosuggestions.zsh
+source ~/.zshplug/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
 
 clear
-fortune -a | cowsay -f $(ls /usr/local/share/cows | gshuf -n1) | lolcat
+# fortune -a | cowsay -f $(ls /usr/local/share/cows | gshuf -n1) | lolcat
+echo "\033[1m`whoami`\033[00m on \033[1m`hostname`\033[0m"
+date
+echo "`uname -o` `uname -r`"
 echo
 
 function preexec() {
