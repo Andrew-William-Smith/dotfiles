@@ -1,8 +1,8 @@
 [general]
-ui = TTY.TTYUI
-accounts = Gmail, School
+accounts = Gmail, Primary
 maxsyncaccounts = 3
 fsync = False
+pythonfile = ~/.offlineimap.py
 
 [Account Gmail]
 localrepository = GmailLocal
@@ -12,41 +12,34 @@ status_backend = sqlite
 [Repository GmailLocal]
 type = Maildir
 localfolders = ~/.maildir/Gmail
-nametrans = lambda folder: {'drafts':  '[Gmail]/Drafts',
-                       'sent':    '[Gmail]/Sent Mail',
-                       'trash':   '[Gmail]/Trash'
-                           }.get(folder, folder)
 
 [Repository GmailRemote]
-auth_mechanisms = LOGIN
 type = Gmail
-remoteuser = andy.bill.smith@gmail.com
-remotepass = PASS
+remoteuser = GMAIL ADDRESS
+remotehost = imap.gmail.com
+remotepasseval = get_password_emacs('imap.gmail.com', 'GMAIL ADDRESS', 993)
 ssl = yes
-sslcacertfile = /usr/local/etc/openssl/cert.pem
+sslcacertfile = /etc/ssl/certs/ca-certificates.crt
 maxconnections = 1
 realdelete = no
-nametrans = lambda folder: {'[Gmail]/Drafts':    'drafts',
-                       '[Gmail]/Sent Mail': 'sent',
-                       '[Gmail]/Trash':     'trash'
-                           }.get(folder, folder)
 folderfilter = lambda folder: folder not in ['Yahoo!', '[Gmail]/Spam', '[Gmail]/All Mail', '[Gmail]/Starred', '[Gmail]/Important', '[Readdle]', '[Readdle]/Later']
 
-[Account School]
-localrepository = SchoolLocal
-remoterepository = SchoolRemote
+[Account Primary]
+localrepository = PrimaryLocal
+remoterepository = PrimaryRemote
 status_backend = sqlite
 
-[Repository SchoolLocal]
+[Repository PrimaryLocal]
 type = Maildir
-localfolders = ~/.maildir/School
+localfolders = ~/.maildir/Primary
 
-[Repository SchoolRemote]
+[Repository PrimaryRemote]
 type = IMAP
-remoteuser = 18smitha@smtexas.org
-remotepass = PASS
-remotehost = localhost
-remoteport = 1143
+remoteuser = PERSONAL ADDRESS
+remotepasseval = get_password_emacs('imap.zoho.com', 'PERSONAL ADDRESS', 993)
+remotehost = imap.zoho.com
+remoteport = 993
 maxconnections = 1
-ssl = no
+ssl = yes
+sslcacertfile = /etc/ssl/certs/ca-certificates.crt
 realdelete = no
